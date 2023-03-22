@@ -2,33 +2,71 @@ import pandas as pd
 import numpy as np 
 import plotly.graph_objects as go
 import plotly.express as px
-import kaleido #required
+#import kaleido #required
 import plotly.io as pio
 
 
 
 # df_all = pd.read_excel('/Users/veda/Dropbox (Personal)/NetFlax/Stats_App/Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='2. All_Searched_Data')
 # df_netflax = pd.read_excel('/Users/veda/Dropbox (Personal)/NetFlax/Stats_App/Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='3. NetFlax_Data')
-df_all = pd.read_excel('./Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='2. All_Searched_Data')
-df_netflax = pd.read_excel('./Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='3. NetFlax_Data')
-df_netflax.drop(df_netflax[df_netflax['TDomain'] == 'D41'].index, inplace = True)
+df_all = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
+df_netflax = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
+
+
+
+def ta_distribution_table(level, df_nf, df_all, kingdom=None):
+    """
+    Constructs a table from two pivots tables (different df).
+
+    Parameters: 
+    level (str): Taxonomy level at which to sort the table (possible: 
+        'phylum', 'class', 'order', 'family', or 'genus')
+    df_nf (df): Netflax dataset/sheet
+    df_all (df): All searched genomes dataset/sheet
+    kingdom (str): If specified, will only select genomes of given 
+        kingdom (possible: 'Bacteria', 'Archaea', or 'Viruses')
+
+    Returns:
+    table (df): Table with three columns (1) netflax genome count, 
+    (2) all searched genome count, and (3) the difference as percentage
+    """
+    
+    # 1. Only keeping the TAs of the selected kingdom in the df
+    if kingdom is not None:            
+        df_all = df_all[df_all['superkingdom'] == kingdom]
+        df_nf = df_nf[df_nf['superkingdom'] == kingdom]
+
+    # 2. Creating pivot tables (isolating relevant columns)
+    pivot_nf = df_nf.pivot_table(index=level, values='taxa', aggfunc='count')
+    pivot_all = df_all.pivot_table(index=level, values='taxa', aggfunc='count')
+
+    # 3. Merging the pivot tables
+    table = pd.merge(pivot_nf, pivot_all, on=level)
+    
+    # 4. Adding a percentage column to the new table
+    table['percentage'] = ((table['taxa_x']/(table['taxa_x'] + table['taxa_y'])) * 100).round(2)
+    table = table.sort_values('taxa_x', ascending=False)
+
+    return table
+
+
 
 def nf_or_not(row):
-    if row['Proteome size'] > 0:
+    if row['proteome_size'] > 0:
         return 'Yes'
     else:
         return 'No'
 
 df_all['NetFlax'] = df_all.apply(lambda row: nf_or_not(row), axis = 1)
 
-df = df_netflax.pivot_table(columns = ['Combination'], aggfunc = 'size')
+df = df_netflax.pivot_table(columns = ['at_t_combinations'], aggfunc = 'size')
 
 
 
 
 print(df.to_string())
 
-comb = df_netflax['Combination'].nunique()
+comb = df_netflax['at_t_combinations'].nunique()
 
 # from scipy.stats import chi2_contingency
 

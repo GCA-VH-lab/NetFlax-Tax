@@ -12,24 +12,23 @@ from dash.exceptions import PreventUpdate
 
 import stat 
 
-df_all = pd.read_excel('./Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='2. All_Searched_Data')
-df_netflax = pd.read_excel('./Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='3. NetFlax_Data')
-df_graph_2 = pd.read_excel('./Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='Graph_2')
-df_netflax.drop(df_netflax[df_netflax['T Domain'] == 'D41'].index, inplace = True)
+df_all = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
+df_netflax = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
+
+
 
 
 
 # Callback 1: Searchbar
-
 def update_dropdown_options(btn_gcf, btn_acc, btn_node):
     data = df_netflax
     button_id = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
     if button_id == 'gcf-number':
-        return [{'label': value, 'value': value} for value in data['GCF Number']]
+        return [{'label': value, 'value': value} for value in data['gcf_number']]
     elif button_id == 'accession-number':
-        return [{'label': value, 'value': value} for value in data['AT Accession']]
+        return [{'label': value, 'value': value} for value in data['at_accession']]
     elif button_id == 'node':
-        return [{'label': value, 'value': value} for value in data['AT Domain']]
+        return [{'label': value, 'value': value} for value in data['at_domain']]
     else:
         return []
 

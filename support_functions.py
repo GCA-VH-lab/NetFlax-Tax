@@ -42,35 +42,62 @@ def sunburst(df_all):
 
 
 
-def taxonomoy_barplot(df):
-    data = pd.melt(
-        df, 
-        id_vars=['Row Labels'], 
-        var_name='Category', 
-        value_name='Value'
-    )
-    data['Percent'] = df['Percentage'] * 100
-    color_map = {
-        'Bacteria (NF)': bacteria_color_nf,
-        'Bacteria (All)': bacteria_color,
-        'Archaea (NF)': archaea_color_nf,
-        'Archaea (All)': archaea_color,
-        'Viruses (NF)': viruses_color_nf,
-        'Viruses (All)': viruses_color,
-    }
+def taxonomy_distribution_table(level, df_nf, df_all, kingdom=None):
+    """
+    Constructs a table from two pivots tables (different df).
+
+    Parameters: 
+    level (str): Taxonomy level at which to sort the table (possible: 
+        'phylum', 'class', 'order', 'family', or 'genus')
+    df_nf (df): Netflax dataset/sheet
+    df_all (df): All searched genomes dataset/sheet
+    kingdom (str): If specified, will only select genomes of given 
+        kingdom (possible: 'Bacteria', 'Archaea', or 'Viruses')
+
+    Returns:
+    table (df): Table with three columns (1) netflax genome count, 
+    (2) all searched genome count, and (3) the difference as percentage
+    """
+    
+    # 1. Only keeping the TAs of the selected kingdom in the df
+    if kingdom is not None:            
+        df_all = df_all[df_all['superkingdom'] == kingdom]
+        df_nf = df_nf[df_nf['superkingdom'] == kingdom]
+
+    # 2. Creating pivot tables (isolating relevant columns)
+    pivot_nf = df_nf.pivot_table(index=level, values='taxa', aggfunc='count')
+    pivot_all = df_all.pivot_table(index=level, values='taxa', aggfunc='count')
+
+    # 3. Merging the pivot tables
+    table = pd.merge(pivot_nf, pivot_all, on=level)
+    table = table.reset_index()
+    
+    # 4. Adding a percentage column to the new table
+    table['percentage'] = ((table['taxa_x']/(table['taxa_x'] + table['taxa_y'])) * 100).round(2)
+    table = table.sort_values('taxa_x', ascending=False)
+
+    return table
+
+
+def taxonomy_distribution_barplot(df):
+    """
+    Creates the taxonomy bar plot. 
+    """
+    #df = taxonomoy_distribution_table('class', df_netflax, df_all)
+    
     barplot = px.bar(
-        data, 
-        y = 'Row Labels',
-        x = 'Value',
-        text = 'Percent',
-        color = 'Category',
-        color_discrete_map = color_map,
+        df, 
+        x = ['taxa_x', 'taxa_y'],
+        y = 'phylum',
+        text = 'percentage',
+        color = 'phylum',
         barmode = 'stack',
 
     )
     barplot.update_traces(
         hovertemplate = 'f%<b>{y}: <br>Genome count: %{x}',
-        showlegend = False
+        showlegend = False, 
+        textposition = ['none', 'outside']
     )
     barplot.update_layout(
         title = 'Distribution of TAs',
@@ -78,7 +105,7 @@ def taxonomoy_barplot(df):
         font = dict(
             size = 12,
         ),
-        height = len(data['Row Labels']) * 3,
+        height = len(df['phylum']) * 7,
         margin = dict(l=10, r=10, t=30, b=10, pad=10),
         paper_bgcolor = background_color,
         plot_bgcolor = background_color,
@@ -89,7 +116,6 @@ def taxonomoy_barplot(df):
             tickfont = dict(size = 10)
         ),
         yaxis = dict(
-            autorange = 'reversed',
             title_text = 'Phylum',
             titlefont = dict(size = 15),
             tickfont = dict(size = 10),
@@ -101,7 +127,7 @@ def taxonomoy_barplot(df):
 def superkingdom_piechart(df_netflax):
     pie_chart = px.sunburst(
         data_frame = df_netflax,
-        path = ['AT Domain', 'T Domain'], 
+        path = ['at_domain', 't_domain'], 
         maxdepth = -1
     )
     return pie_chart
@@ -111,13 +137,13 @@ def superkingdom_piechart(df_netflax):
 def combinations_heatmap(df_netflax):
     pivot_1 = pd.pivot_table(
         df_netflax,
-        values = ['Taxa'], 
-        index = ['Phylum'],
-        columns = ['AT : T Combination'],
+        values = ['taxa'], 
+        index = ['phylum'],
+        columns = ['at_t_combinations'],
         aggfunc = lambda x: len(x.unique())
     )
 
-    data = pivot_1['Taxa']
+    data = pivot_1['taxa']
 
     heatmap = px.imshow(
         data,

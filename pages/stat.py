@@ -24,18 +24,14 @@ from plotly.subplots import make_subplots
 
 
 from pages import navigation
-from support_functions import sunburst, taxonomoy_barplot, superkingdom_piechart, combinations_heatmap
+from support_functions import sunburst, taxonomy_distribution_barplot, superkingdom_piechart, combinations_heatmap, taxonomy_distribution_table
 # --------------------------- CREATE PAGE ------------------------------
 
 dash.register_page(__name__, path = '/')
 
 
-# df_all = pd.read_excel('/Users/veda/Dropbox (Personal)/NetFlax/Stats_App/Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='2. All_Searched_Data')
-# df_netflax = pd.read_excel('/Users/veda/Dropbox (Personal)/NetFlax/Stats_App/Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='3. NetFlax_Data')
-df_all = pd.read_excel('./Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='2. All_Searched_Data')
-df_netflax = pd.read_excel('./Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='3. NetFlax_Data')
-df_graph_2 = pd.read_excel('./Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='Graph_2')
-df_netflax.drop(df_netflax[df_netflax['T Domain'] == 'D41'].index, inplace = True)
+df_all = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
+df_netflax = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
 
 data = df_netflax
 
@@ -137,7 +133,7 @@ layout = html.Div([
                     html.Div([
                         dcc.Graph(
                             id = 'a2_taxonomy_barplot',
-                            figure = taxonomoy_barplot(df_graph_2)
+                            figure = taxonomy_distribution_barplot(taxonomy_distribution_table('phylum', df_netflax, df_all))
                         )
                     ], style={
                         'marginTop': '40px',
