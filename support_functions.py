@@ -83,16 +83,14 @@ def taxonomy_distribution_barplot(df):
     """
     Creates the taxonomy bar plot. 
     """
-    #df = taxonomoy_distribution_table('class', df_netflax, df_all)
-    
     barplot = px.bar(
         df, 
         x = ['taxa_x', 'taxa_y'],
         y = 'phylum',
+        height = 120+25*len(df.index),
         text = 'percentage',
         color = 'phylum',
         barmode = 'stack',
-
     )
     barplot.update_traces(
         hovertemplate = 'f%<b>{y}: <br>Genome count: %{x}',
@@ -105,7 +103,6 @@ def taxonomy_distribution_barplot(df):
         font = dict(
             size = 12,
         ),
-        height = len(df['phylum']) * 7,
         margin = dict(l=10, r=10, t=30, b=10, pad=10),
         paper_bgcolor = background_color,
         plot_bgcolor = background_color,

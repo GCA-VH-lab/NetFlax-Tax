@@ -24,6 +24,7 @@ from plotly.subplots import make_subplots
 
 
 from pages import navigation
+from callbacks import display_selected_kingdom
 from support_functions import sunburst, taxonomy_distribution_barplot, superkingdom_piechart, combinations_heatmap, taxonomy_distribution_table
 # --------------------------- CREATE PAGE ------------------------------
 
@@ -130,10 +131,24 @@ layout = html.Div([
                     )
                 ], width = 5),
                 dbc.Col([
+                    dbc.Row([
+                        html.Div([
+                            html.Button('Phylum', id = 'phylum-level'),
+                            html.Button('Class', id = 'class-level'),
+                            html.Button('Order', id = 'order-level'),
+                            html.Button('Family', id = 'family-level'),
+                            html.Button('Genus', id = 'genus-level'),
+                        ]),
+                    ], style={
+                    'marginTop': '20px',
+                    'marginLeft': '55px', 
+                    'padding': '10px',
+                    'backgroundColor': background_color}),
                     html.Div([
                         dcc.Graph(
-                            id = 'a2_taxonomy_barplot',
-                            figure = taxonomy_distribution_barplot(taxonomy_distribution_table('phylum', df_netflax, df_all))
+                            id = 'a2_taxonomy_barplot', 
+                            config={'responsive': False}, 
+                            style={'overflowY': 'scroll', 'height': 500},
                         )
                     ], style={
                         'marginTop': '40px',
