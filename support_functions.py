@@ -79,17 +79,26 @@ def taxonomy_distribution_table(level, df_nf, df_all, kingdom=None):
     return table
 
 
-def taxonomy_distribution_barplot(df):
+def taxonomy_distribution_barplot(df, level):
     """
     Creates the taxonomy bar plot. 
+
+    Parameters: 
+    df (df): 
+    level (str): Taxonomy level at which to sort the table (possible: 
+        'phylum', 'class', 'order', 'family', or 'genus')
+
+    Returns:
+    barplot (plot): A barplot with number of TA pairs (x-axis) and
+    level (y-axis)
     """
     barplot = px.bar(
         df, 
         x = ['taxa_x', 'taxa_y'],
-        y = 'phylum',
+        y = level,
         height = 120+25*len(df.index),
         text = 'percentage',
-        color = 'phylum',
+        color = level,
         barmode = 'stack',
     )
     barplot.update_traces(
@@ -113,7 +122,7 @@ def taxonomy_distribution_barplot(df):
             tickfont = dict(size = 10)
         ),
         yaxis = dict(
-            title_text = 'Phylum',
+            title_text = level,
             titlefont = dict(size = 15),
             tickfont = dict(size = 10),
         ),

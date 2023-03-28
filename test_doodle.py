@@ -6,14 +6,16 @@ import plotly.express as px
 import plotly.io as pio
 
 
-
-# df_all = pd.read_excel('/Users/veda/Dropbox (Personal)/NetFlax/Stats_App/Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='2. All_Searched_Data')
-# df_netflax = pd.read_excel('/Users/veda/Dropbox (Personal)/NetFlax/Stats_App/Dataset_S1_Updated.xlsx', engine='openpyxl', sheet_name='3. NetFlax_Data')
 df_all = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
 df_netflax = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
 
 
+# 
 
+
+
+
+# Works, NOTE  need similar for Sunburst plot
 def ta_distribution_table(level, df_nf, df_all, kingdom=None):
     """
     Constructs a table from two pivots tables (different df).

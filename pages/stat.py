@@ -24,7 +24,7 @@ from plotly.subplots import make_subplots
 
 
 from pages import navigation
-from callbacks import display_selected_kingdom
+from callbacks import display_selected_kingdom, update_dropdown_options
 from support_functions import sunburst, taxonomy_distribution_barplot, superkingdom_piechart, combinations_heatmap, taxonomy_distribution_table
 # --------------------------- CREATE PAGE ------------------------------
 
@@ -78,21 +78,30 @@ layout = html.Div([
                     'padding': '10px',
                     'backgroundColor': background_color}),
                 dbc.Col([
-                    dcc.Dropdown(
-                        id = 'search-dropdown',
-                        options = [{'label': k, 'value': k} for k in data.keys()],
-                        placeholder = 'Search...',
-                        clearable = True
-                    ),
+                    dcc.Loading(
+                        dcc.Dropdown(
+                            id = 'search-dropdown',
+                            placeholder = 'Select a search option',
+                            clearable = True
+                        ),
+                        type = 'default'
+                    )
                 ], style={
                     'marginTop': '5px',
                     'marginLeft': '55px', 
                     'padding': '10px',
                     'backgroundColor': background_color}),
                 dbc.Col([
-                    html.Div(
-                        id = 'search-results'
-                    )
+                    html.Br(),
+                    dcc.Loading(
+                        id='result-container-loading', 
+                        type='circle', 
+                        fullscreen=True, 
+                        children=[
+                            html.Div(
+                                id='result-container', 
+                                style={'textAlign': 'center'})
+                    ])
                 ])
             ]),
             dbc.Row([
@@ -121,7 +130,7 @@ layout = html.Div([
                     html.Div([
                         dcc.Graph(
                             id = 'a1_superkingdom_sunburst',
-                            figure = sunburst(df_all), 
+                            figure = sunburst(df_all),
                         )
                     ], style={
                         'marginTop': '40px',
@@ -145,10 +154,14 @@ layout = html.Div([
                     'padding': '10px',
                     'backgroundColor': background_color}),
                     html.Div([
-                        dcc.Graph(
-                            id = 'a2_taxonomy_barplot', 
-                            config={'responsive': False}, 
-                            style={'overflowY': 'scroll', 'height': 500},
+                        dcc.Loading(
+                            id = 'loading_a2_taxonomy_barplot',
+                            type = 'circle',
+                            children = dcc.Graph(
+                                id = 'a2_taxonomy_barplot', 
+                                config={'responsive': False}, 
+                                style={'overflowY': 'scroll', 'height': 500},
+                            )
                         )
                     ], style={
                         'marginTop': '40px',
