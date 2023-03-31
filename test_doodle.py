@@ -10,10 +10,6 @@ df_all = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='
 df_netflax = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
 
 
-# 
-
-
-
 
 # Works, NOTE  need similar for Sunburst plot
 def ta_distribution_table(level, df_nf, df_all, kingdom=None):

@@ -77,7 +77,7 @@ layout = html.Div([
                     'marginLeft': '55px', 
                     'padding': '10px',
                     'backgroundColor': background_color}),
-                dbc.Col([
+                dbc.Row([
                     dcc.Loading(
                         dcc.Dropdown(
                             id = 'search-dropdown',
@@ -91,7 +91,7 @@ layout = html.Div([
                     'marginLeft': '55px', 
                     'padding': '10px',
                     'backgroundColor': background_color}),
-                dbc.Col([
+                dbc.Row([
                     html.Br(),
                     dcc.Loading(
                         id='result-container-loading', 
@@ -102,7 +102,11 @@ layout = html.Div([
                                 id='result-container', 
                                 style={'textAlign': 'center'})
                     ])
-                ])
+                ], style={
+                    'marginTop': '5px',
+                    'marginLeft': '55px', 
+                    'padding': '10px',
+                    'backgroundColor': background_color})                                                                
             ]),
             dbc.Row([
                 html.Div(
