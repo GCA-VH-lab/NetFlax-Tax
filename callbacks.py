@@ -47,20 +47,65 @@ def update_dropdown_options(gcf_click=None, acc_click=None, node_click=None):
 
 
 
-
-# Callback 2: Selecting search option
+# Callback 2: Getting info about selected option
 @callback(
     Output('result-container', 'children'), 
-    Input('search-dropdown', 'value'),
+    Input('search-dropdown', 'value')
 )
 
-def update_result_container(value):
-    if value:
-        # Show search results layout
-        return html.H1(f'Search results for "{value}"')
+def search_results(search_term):
+    if search_term.startswith('GCF'):
+        number_of_ta = df_all.loc[df_all['gcf_number'] == search_term, 'number_of_predicted_tas'].values[0]
+        proteome_size = df_all.loc[df_all['gcf_number'] == search_term, 'proteome_size'].values[0]
+        term_superkingdom = df_all.loc[df_all['gcf_number'] == search_term, 'superkingdom'].values[0]
+        term_phylum = df_all.loc[df_all['gcf_number'] == search_term, 'phylum'].values[0]
+        term_class = df_all.loc[df_all['gcf_number'] == search_term, 'class'].values[0]
+        term_order = df_all.loc[df_all['gcf_number'] == search_term, 'order'].values[0]
+        term_family = df_all.loc[df_all['gcf_number'] == search_term, 'family'].values[0]
+        term_genus = df_all.loc[df_all['gcf_number'] == search_term, 'genus'].values[0]
+        term_species = df_all.loc[df_all['gcf_number'] == search_term, 'species'].values[0]
+        term_subspecies = df_all.loc[df_all['gcf_number'] == search_term, 'taxa'].values[0]
+        return html.Div(
+            dbc.Row([
+                html.H4(f'Search results for "{search_term}"')
+            ]),
+            dbc.Row([
+                dbc.Col([
+
+                ]),
+                dbc.Col([
+
+                ]),
+            ])
+
+        )
+    elif search_term.startswith('WP_'):
+        for row in df_netflax.itertuples():
+            search_a = row['at_accession']
+            search_t = row['t_accession']
+    elif search_term.startswith('D') or search_term.startswith('M'):
+        search_nod = search_term
     else:
-        # Hide container if search is not initiated
-        return None
+        print(f'{search_term} not specified')
+
+
+
+# # Callback 2: Selecting search option
+# @callback(
+#     Output('result-container', 'children'), 
+#     Input('search-dropdown', 'value'),
+# )
+
+# def update_result_container(value):
+#     if value:
+#         # Show search results layout
+#         return html.Div(
+#             html.H4(f'Search results for "{value}"'),
+
+#         )
+#     else:
+#         # Hide container if search is not initiated
+#         return None
 
 
 # Callback 3. Linking the Sunburst chart with the Taxonomy barplot
