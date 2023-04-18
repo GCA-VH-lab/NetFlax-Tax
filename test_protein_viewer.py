@@ -46,6 +46,16 @@ def structure_file(s):
     return pdb_url_new
 
 
+def get_structural_data(accession):
+    pdb_parser = PdbParser(structure_file(accession))
+    data = pdb_parser.mol3d_data()
+
+    styles = create_mol3d_style(
+        data['atoms'], visualization_type='cartoon', color_element='chain'
+    )
+    
+    return data, styles
+
 # -------------------------- PROTEIN VIEWER ----------------------------
 
 app = dash.Dash(__name__)

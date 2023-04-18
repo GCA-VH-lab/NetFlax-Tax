@@ -1,16 +1,22 @@
 import pandas as pd
 import re
 import dash
+import requests
 
-from dash import html, dcc, callback, ctx
+from dash import html, dcc, callback, ctx, dash_table
 from dash.dependencies import Input, Output, State
+
+import dash_bio as dashbio
+from dash_bio.utils import PdbParser, create_mol3d_style
 
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
+import dash_cytoscape as cyto
+
 
 import stat 
 from support_functions import taxonomy_distribution_table, taxonomy_distribution_barplot
-
+from test_protein_viewer import structure_file, get_structural_data, create_mol3d_style
 
 
 #
@@ -50,7 +56,7 @@ def update_dropdown_options(gcf_click=None, acc_click=None, node_click=None):
 # Callback 2: Getting info about selected option
 @callback(
     Output('result-container', 'children'), 
-    Input('search-dropdown', 'value')
+    Input('search-dropdown', 'value'),
 )
 
 def search_results(search_term):
@@ -65,47 +71,188 @@ def search_results(search_term):
         term_genus = df_all.loc[df_all['gcf_number'] == search_term, 'genus'].values[0]
         term_species = df_all.loc[df_all['gcf_number'] == search_term, 'species'].values[0]
         term_subspecies = df_all.loc[df_all['gcf_number'] == search_term, 'taxa'].values[0]
+        part_of_netflax = "Yes" if number_of_ta > 0 else "No"
         return html.Div(
-            dbc.Row([
-                html.H4(f'Search results for "{search_term}"')
-            ]),
-            dbc.Row([
-                dbc.Col([
-
+            children=[
+                dbc.Row([
+                    html.H4(f'Search results for "{search_term}"')
                 ]),
-                dbc.Col([
-
-                ]),
-            ])
-
+                dbc.Row([
+                    dbc.Col([
+                        dbc.Accordion(
+                            [
+                                dbc.AccordionItem(title=f'Superkingdom: {term_superkingdom}', children=[
+                                    dbc.Accordion(
+                                        [
+                                            dbc.AccordionItem(title=f'Phylum: {term_phylum}', children=[
+                                                dbc.Accordion(
+                                                    [
+                                                        dbc.AccordionItem(title=f'Class: {term_class}', children=[
+                                                            dbc.Accordion(
+                                                                [
+                                                                    dbc.AccordionItem(title=f'Order: {term_order}', children=[
+                                                                        dbc.Accordion(
+                                                                            [
+                                                                                dbc.AccordionItem(title=f'Family: {term_family}', children=[
+                                                                                    dbc.Accordion(
+                                                                                        [
+                                                                                            dbc.AccordionItem(title=f'Genus: {term_genus}', children=[
+                                                                                                dbc.Accordion(
+                                                                                                    [
+                                                                                                        dbc.AccordionItem(title=f'Species: {term_species}', children=[
+                                                                                                            dbc.Accordion(
+                                                                                                                [
+                                                                                                                    dbc.AccordionItem(title=f'Subspecies: {term_subspecies}')
+                                                                                                                ],
+                                                                                                                flush=True,
+                                                                                                            )
+                                                                                                        ])
+                                                                                                    ],
+                                                                                                    flush=True,
+                                                                                                )
+                                                                                            ])
+                                                                                        ],
+                                                                                        flush=True,
+                                                                                    )
+                                                                                ])
+                                                                            ],
+                                                                            flush=True,
+                                                                        )
+                                                                    ])
+                                                                ],
+                                                                flush=True,
+                                                            )
+                                                        ])
+                                                    ],
+                                                    flush=True,
+                                                )
+                                            ])
+                                        ],
+                                        flush=True,
+                                    )
+                                ])
+                            ],
+                            flush=True,
+                        )
+                    ]),
+                    dbc.Col([
+                        html.H5(f'Part of the NetFlax network: {part_of_netflax}'),
+                        html.H5(f'Proteome size: {proteome_size}'),
+                        html.H5(f'Number of TAs: {number_of_ta}'),
+                    ]),
+                ])
+            ]
         )
     elif search_term.startswith('WP_'):
+        antitoxin_color = 'darkgreen'
+        toxin_color = 'darkred'
         for row in df_netflax.itertuples():
-            search_a = row['at_accession']
-            search_t = row['t_accession']
+            if search_term == row.at_accession:
+                search_a = row.at_accession
+                search_t = row.t_accession
+                search_at_dom = row.at_domain
+                search_t_dom = row.t_domain
+                proteome_size = row.proteome_size
+                text_color = antitoxin_color
+                chain_colors = {'E': antitoxin_color}
+            elif search_term == row.t_accession:
+                search_a = row.at_accession
+                search_t = row.t_accession
+                search_at_dom = row.at_domain
+                search_t_dom = row.t_domain
+                proteome_size = row.proteome_size
+                text_color = toxin_color
+                chain_colors = {'E': toxin_color}
+            else:
+                continue
+        
+        structure_data, styles = get_structural_data(search_term)
+
+        return html.Div(
+            children=[
+                dbc.Row([
+                    html.H4(f'Search results for "{search_term}"', style={'color': text_color})
+                ]),
+                dbc.Row([
+                    dbc.Col([
+                        html.H5(f'Antitoxin: {search_a}', style={'color': antitoxin_color}),
+                        html.H5(f'Antitoxin Domain: {search_at_dom}', style={'color': antitoxin_color}),
+                        html.Br(),
+                        html.H5(f'Toxin: {search_t}', style={'color': toxin_color}),
+                        html.H5(f'Toxin Domain: {search_t_dom}', style={'color': toxin_color}),
+                        html.Br(),
+                        html.H5(f'Proteome Size: {proteome_size}', style={'color': 'black'}),
+
+                    ]),
+                    dbc.Col([
+                            dashbio.Molecule3dViewer(
+                            id='dashbio-default-molecule3d',
+                            modelData=structure_data,
+                            styles=styles,
+                        )
+                    ]),
+                    dbc.Col([
+                        "Selection data",
+                        html.Hr(),
+                        html.Div(id='molecule-info-container')
+                    ])
+                ]),
+            ]
+        )   
     elif search_term.startswith('D') or search_term.startswith('M'):
-        search_nod = search_term
+        # Fetch the nodes from the DataFrame
+        nodes_at = df_netflax.loc[df_netflax['at_domain'] == search_term, 't_domain'].tolist()
+        nodes_t = df_netflax.loc[df_netflax['t_domain'] == search_term, 'at_domain'].tolist()
+
+        # Combine the nodes from both columns
+        nodes = nodes_at + nodes_t
+
+        # Define the edges for the given node
+        edges = [{'data': {'source': search_term, 'target': node}} for node in nodes if node != search_term]
+        # Define the layout
+        layout = {'name': 'grid'}
+        # Combine nodes, edges, and layout into the elements list
+        elements = [{'data': {'id': node, 'label': node}} for node in nodes] + edges
+
+        return html.Div(
+            children=[
+                dbc.Row([
+                    html.H4(f'Search results for "{search_term}"'),
+                ]),
+                dbc.Row([
+                    cyto.Cytoscape(
+                    id='cyto-network',
+                    elements=elements,
+                    layout=layout,
+                    style={'width': '100%', 'height': '400px'}
+                    )
+                ]),
+            ])
     else:
         print(f'{search_term} not specified')
 
 
 
-# # Callback 2: Selecting search option
-# @callback(
-#     Output('result-container', 'children'), 
-#     Input('search-dropdown', 'value'),
-# )
+# Update callback for Molecule3dViewer
+@callback(
+    Output('molecule-info-container', 'children'),
+    Input('dashbio-default-molecule3d', 'selectedAtomIds')
+)
+def display_molecule_info(click_info):
+    if click_info is None:
+        return html.Div()  # Return empty div if no click info available
+    else:
+        atom_id = click_info['atom']
+        chain_id = click_info['chain']
+        element = click_info['elem']
+        residue_name = click_info['residue_name']
 
-# def update_result_container(value):
-#     if value:
-#         # Show search results layout
-#         return html.Div(
-#             html.H4(f'Search results for "{value}"'),
-
-#         )
-#     else:
-#         # Hide container if search is not initiated
-#         return None
+        return html.Div([
+            html.Div(f'Element: {element}'),
+            html.Div(f'Chain: {chain_id}'),
+            html.Div(f'Residue name: {residue_name}'),
+            html.Br()
+        ])
 
 
 # Callback 3. Linking the Sunburst chart with the Taxonomy barplot

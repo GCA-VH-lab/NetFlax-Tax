@@ -210,19 +210,6 @@ layout = html.Div([
                         'padding': '10px',
                         'backgroundColor': background_color})
                 ], width = 5),
-                dbc.Col([
-                    html.Div([
-                        dcc.Graph(
-                            id = 'b2_combinations_heatmap',
-                            figure = combinations_heatmap(df_netflax)
-                        )
-                    ], style={
-                        'marginTop': '40px',
-                        'marginLeft': '10px',
-                        'marginRight': '10px', 
-                        'padding': '10px',
-                        'backgroundColor': background_color}),
-                ], width = 7),
             ]),       
         ])
 
