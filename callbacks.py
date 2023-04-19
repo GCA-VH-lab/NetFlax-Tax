@@ -3,6 +3,7 @@ import re
 import dash
 import requests
 
+import plotly.express as px
 from dash import html, dcc, callback, ctx, dash_table
 from dash.dependencies import Input, Output, State
 
@@ -20,8 +21,8 @@ from test_protein_viewer import structure_file, get_structural_data, create_mol3
 
 
 #
-df_all = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
-df_netflax = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
+df_all = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
+df_netflax = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
 
 
 
@@ -309,3 +310,44 @@ def display_selected_kingdom(
         bar_plot_data = taxonomy_distribution_barplot(taxonomy_distribution_table('phylum', df_netflax, df_all), level)
     
     return bar_plot_data
+
+
+
+
+
+# SLIDER FOR TAXONOMIC LEVEL
+# create a list of paths with different number of levels
+paths = {
+    0: ['superkingdom'],
+    1: ['superkingdom', 'phylum'],
+    2: ['superkingdom', 'phylum', 'class'],
+    3: ['superkingdom', 'phylum', 'class', 'order'],
+    4: ['superkingdom', 'phylum', 'class', 'order', 'family'],
+    5: ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus'],
+    6: ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'taxa']
+}
+
+@callback(
+    Output('a1_taxonomy_sunburst', 'figure'),
+    Input('taxonomy_level_slider', 'value')
+)
+def update_sunburst_level(level):
+    # get the data for the selected value
+    dataset = df_netflax.head(200)
+
+    # create a sunburst chart with the selected number of levels
+    path = paths[level - 1]
+    sunburst_plot = px.sunburst(
+        data_frame=dataset,
+        path=path,
+        values=path[-1],
+        color=path[-1],
+        color_discrete_sequence=px.colors.qualitative.Pastel,
+    )
+    sunburst_plot.update_layout(
+        title='Taxonomy Sunburst',
+        margin=dict(t=50, l=0, r=0, b=0),
+        height=800,
+        width=800,
+    )
+    return sunburst_plot

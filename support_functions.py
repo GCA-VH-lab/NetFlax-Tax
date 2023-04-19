@@ -18,7 +18,7 @@ antitoxin_color = '#D3E171'
 
 
 
-def sunburst(df_all):
+def sunburst():
     color_discrete_sequence = ['', bacteria_color, bacteria_color, archaea_color, archaea_color, viruses_color, viruses_color]
     sunburst_plot = go.Figure(go.Sunburst(
         values = [24466, 13551, 3286, 10449, 13, 466, 120],
@@ -37,6 +37,17 @@ def sunburst(df_all):
         ),
         margin = dict(l=10, r=10, t=30, b=10),
         paper_bgcolor = background_color
+    )
+    return sunburst_plot
+
+
+
+def taxonomy_sunburst(dataset):
+    sunburst_plot = px.sunburst(
+        data_frame = dataset,
+        path = ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'taxa'],
+        maxdepth = -1,
+        color_discrete_sequence = px.colors.qualitative.Pastel
     )
     return sunburst_plot
 

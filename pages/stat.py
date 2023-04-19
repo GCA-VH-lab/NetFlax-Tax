@@ -31,8 +31,8 @@ from support_functions import sunburst, taxonomy_distribution_barplot, superking
 dash.register_page(__name__, path = '/')
 
 
-df_all = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
-df_netflax = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
+df_all = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
+df_netflax = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
 
 data = df_netflax
 
@@ -134,7 +134,7 @@ layout = html.Div([
                     html.Div([
                         dcc.Graph(
                             id = 'a1_superkingdom_sunburst',
-                            figure = sunburst(df_all),
+                            figure = sunburst(),
                         )
                     ], style={
                         'marginTop': '40px',
