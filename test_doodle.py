@@ -6,8 +6,59 @@ import plotly.express as px
 import plotly.io as pio
 
 
-df_all = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
-df_netflax = pd.read_excel('./netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
+
+# Define the dataframe
+df = pd.DataFrame({
+    'colA': ['A', 'A', 'A', 'A'],
+    'colB': ['B', 'B', 'E', 'E'],
+    'colC': ['C', 'D', 'F', 'G'],
+    'value': [4, 16, 35, 5]
+})
+
+search_term = 'C'
+
+# Create the sunburst plot
+fig = px.sunburst(
+    data_frame=df,
+    path=['colA', 'colB', 'colC'],
+    values='value',
+    color='colA',
+    color_continuous_scale=px.colors.sequential.Plasma,
+)
+
+# Set the opacity of all leaves to 0.8
+fig.update_traces(leaf=dict(opacity=0.8))
+
+# Find the indices of the traces corresponding to the rows with search term
+c_indices = []
+for i, row in df.iterrows():
+    if search_term in row.values:
+        c_indices.append(i)
+
+# Set the opacity of the leaves for the search term rows to 1
+for i, trace in enumerate(fig.data):
+    if i in c_indices:
+        trace.leaf.opacity = 1
+    else:
+        trace.leaf.opacity = 0.8
+
+# Show the plot
+fig.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+df_all = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
+df_netflax = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
 
 
 
