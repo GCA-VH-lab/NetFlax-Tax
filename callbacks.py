@@ -25,24 +25,36 @@ df_all = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_n
 df_netflax = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
 
 
+# --------------------------- LAYOUT SPEC ------------------------------
+
+page_background = '#F6F6F6'
+container_background = '#ECECEC'
+transparent_background = 'rgba(0,0,0,0)'
+
+# Visualistions colors
+antitoxin_color = 'darkgreen'
+toxin_color = 'darkred'
+
+
+# ---------------------------- CALLBACKS -------------------------------
 
 
 # Callback 1: Selecting search option
 @callback(
     Output('search-dropdown', 'options'), 
     [
-        Input('gcf-number', 'n_clicks'),
+        Input('taxonomy', 'n_clicks'),
         Input('accession-number', 'n_clicks'),
         Input('node', 'n_clicks')
     ],
 )
 
-def update_dropdown_options(gcf_click=None, acc_click=None, node_click=None):
+def update_dropdown_options(taxa_click=None, acc_click=None, node_click=None):
     df = df_netflax
     ctx = dash.callback_context
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-    if button_id == 'gcf-number':
-        options = list(set(df['gcf_number'].values.tolist()))  
+    if button_id == 'taxonomy':
+        options = list(set(pd.concat([df['superkingdom'], df['phylum'], df['class'], df['order'], df['family'], df['genus'], df['taxa']]).tolist()))
     elif button_id == 'accession-number':
         options = list(set(pd.concat([df['at_accession'], df['t_accession']]).tolist()))
     elif button_id == 'node':
@@ -51,6 +63,7 @@ def update_dropdown_options(gcf_click=None, acc_click=None, node_click=None):
         options = []
     
     return [{'label': option, 'value': option} for option in options]
+
 
 
 
@@ -329,25 +342,84 @@ paths = {
 
 @callback(
     Output('a1_taxonomy_sunburst', 'figure'),
-    Input('taxonomy_level_slider', 'value')
+    Input('taxonomy_level_slider', 'value'),
+    Input('search-dropdown', 'value')
 )
-def update_sunburst_level(level):
-    # get the data for the selected value
-    dataset = df_netflax.head(200)
+def update_sunburst_level(level=None, search_term=None):
+    """
+    A callback for updated the taxonomy sunburst through:
+        1. Search by taxonomy, accession, or node
+        2. The slider (taxonomy level)
+    Default 
+    """
 
-    # create a sunburst chart with the selected number of levels
-    path = paths[level - 1]
-    sunburst_plot = px.sunburst(
-        data_frame=dataset,
-        path=path,
-        values=path[-1],
-        color=path[-1],
-        color_discrete_sequence=px.colors.qualitative.Pastel,
+    # ------------------------------ SEARCH ----------------------------    
+    if search_term != None:
+        # 1. Search by accession
+        if search_term.startswith('WP_'):
+            # Filter the dataframe for the selected search term
+            mask = (df_netflax['at_accession'].str.contains(search_term, case=False)) | (df_netflax['t_accession'].str.contains(search_term, case=False))
+            filtered_df = df_netflax.loc[mask]
+            
+            # Create the sunburst for the whole dataset
+            fig = px.sunburst(
+                data_frame=df_netflax,
+                path=paths[6],
+                color='superkingdom',
+                color_discrete_sequence=px.colors.qualitative.Pastel,
+                branchvalues='total'
+            )
+
+            # Get the last ring based on the taxa of the selected row
+            last_ring = filtered_df[filtered_df['at_accession'] == search_term]['taxa'].values[0]
+            if last_ring == '':
+                last_ring  = filtered_df[filtered_df['t_accession'] == search_term]['taxa'].values[0]
+
+            # Change the color of the selected trace to red and update the outline width
+            for i, trace in enumerate(fig['data']):
+                if trace['ids'][0].split("/")[-1] == last_ring:
+                    trace['marker']['line']['color'] = 'red'
+                    default_marker_line_color = 'red'  # Update the default color
+                else:
+                    trace['marker']['line']['color'] = page_background
+
+            fig.update_traces(
+                marker=dict(line=dict(color=[trace['marker']['line']['color'] for trace in fig['data']], width=0.5)),
+                hovertemplate='<b>%{label} </b> <br>Taxonomy: %{id}<br>Number of TAs: %{value}',
+            )
+            fig.update_layout(
+                plot_bgcolor=transparent_background,
+                paper_bgcolor=transparent_background
+            )
+            return fig
+
+        # 2. Search by node      
+        elif search_term.startswith('D') or search_term.startswith('M'):
+            print('Hi')
+        # 3. Search by taxonomy at any level
+        else:
+            print('Hi')
+
+    # ------------------------------ SLIDER ----------------------------
+
+    # Create a sunburst chart with the selected number of levels
+    dataset = df_netflax
+    if level is None:
+        level = 3  # default value if level is not selected
+
+    # Creating the plot    
+    fig = sunburst_plot = px.sunburst(
+        data_frame = dataset,
+        path = paths[level],
+        color = 'superkingdom',
+        color_discrete_sequence = px.colors.qualitative.Pastel,
     )
-    sunburst_plot.update_layout(
-        title='Taxonomy Sunburst',
-        margin=dict(t=50, l=0, r=0, b=0),
-        height=800,
-        width=800,
+    fig.update_traces(
+        marker = dict(line = dict(color = page_background, width = 0.75)),
+        hovertemplate='<b>%{label} </b> <br>Taxonomy: %{id}<br>Number of TAs: %{value}',
     )
-    return sunburst_plot
+    fig.update_layout(
+        plot_bgcolor = transparent_background,
+        paper_bgcolor = transparent_background)
+    
+    return fig

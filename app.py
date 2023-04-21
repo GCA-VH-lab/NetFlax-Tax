@@ -7,11 +7,14 @@ import dash_bootstrap_components as dbc
 
 # --------------------------- CREATE APP -------------------------------
 
-app = dash.Dash(__name__, 
-                external_stylesheets = [dbc.themes.SANDSTONE, 
-                                        dbc.icons.BOOTSTRAP],
-                suppress_callback_exceptions = True,
-                use_pages = True)
+app = dash.Dash(
+    __name__,
+    assets_folder='assets', 
+    external_stylesheets = [dbc.themes.SANDSTONE, 
+                            dbc.icons.BOOTSTRAP],
+    suppress_callback_exceptions = True,
+    use_pages = True
+)
 
 
 
