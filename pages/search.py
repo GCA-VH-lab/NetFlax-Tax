@@ -3,7 +3,7 @@ import pandas as pd
 import re
 import dash
 
-from dash import html, dcc, callback, ctx
+from dash import html, dcc, callback, ctx, dash_table
 from dash.dependencies import Input, Output, State
 
 import dash_bootstrap_components as dbc
@@ -38,7 +38,6 @@ container_background = '#ECECEC'
 transparent_background = 'rgba(0,0,0,0)'
 
 
-
 # ------------------------------ LAYOUT --------------------------------
 
 layout = html.Div([
@@ -47,9 +46,9 @@ layout = html.Div([
         dbc.Row([
             dbc.Col([
                 dcc.Graph(
-                    id='a1_taxonomy_sunburst',
-                    figure=update_sunburst_level(),
-                    style={
+                    id = 'a1_taxonomy_sunburst',
+                    figure = update_sunburst_level()[0],
+                    style = {
                         'width': '100%', 
                         'height': '100%', 
                         'justify-content': 'center',
@@ -106,7 +105,16 @@ layout = html.Div([
                     )
                 ]),
                 dbc.Row([
-
+                    dcc.Loading(
+                        
+                    )
+                ]), 
+                dbc.Row([
+                    html.H5('Filtered NetFlax Table Results'),
+                    dash_table.DataTable(
+                        id = 'table',
+                        data = update_sunburst_level()[1].to_dict("records"),
+                    )
                 ])
             ],  width={
                     'size': 4, 

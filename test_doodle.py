@@ -7,43 +7,63 @@ import plotly.io as pio
 
 
 
-# Define the dataframe
+import dash
+from dash import dcc, html, Input, Output
+import plotly.express as px
+import pandas as pd
+
 df = pd.DataFrame({
     'colA': ['A', 'A', 'A', 'A'],
     'colB': ['B', 'B', 'E', 'E'],
     'colC': ['C', 'D', 'F', 'G'],
-    'value': [4, 16, 35, 5]
+    'value': [4, 16, 35, 5],
+    'scale_value': [100, 50, 50, 50]
 })
 
-search_term = 'C'
-
-# Create the sunburst plot
 fig = px.sunburst(
     data_frame=df,
     path=['colA', 'colB', 'colC'],
-    values='value',
+    values='scale_value',
     color='colA',
     color_continuous_scale=px.colors.sequential.Plasma,
 )
 
-# Set the opacity of all leaves to 0.8
-fig.update_traces(leaf=dict(opacity=0.8))
+app = dash.Dash(__name__)
 
-# Find the indices of the traces corresponding to the rows with search term
-c_indices = []
-for i, row in df.iterrows():
-    if search_term in row.values:
-        c_indices.append(i)
+app.layout = html.Div([
+    dcc.Input(id='search-input', type='text', placeholder='Enter search term'),
+    dcc.Graph(id='sunburst-chart', figure=fig)
+])
 
-# Set the opacity of the leaves for the search term rows to 1
-for i, trace in enumerate(fig.data):
-    if i in c_indices:
-        trace.leaf.opacity = 1
+@app.callback(
+    Output('sunburst-chart', 'figure'),
+    [Input('search-input', 'value')]
+)
+def update_sunburst(search_term):
+    if search_term:
+        df['color'] = 'gray' # initialize color to gray for all segments
+        df.loc[df['colC'] == search_term, 'color'] = 'red' # set color to red for matching segments
+        fig = px.sunburst(
+            data_frame=df,
+            path=['colA', 'colB', 'colC'],
+            values='scale_value',
+            color='color',
+            color_discrete_map={'gray': 'gray', 'red': 'red'},
+            color_continuous_scale=px.colors.sequential.Plasma,
+        )
     else:
-        trace.leaf.opacity = 0.8
+        fig = px.sunburst(
+            data_frame=df,
+            path=['colA', 'colB', 'colC'],
+            values='scale_value',
+            color='colA',
+            color_continuous_scale=px.colors.sequential.Plasma,
+        )
 
-# Show the plot
-fig.show()
+    return fig
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
 
 
 

@@ -34,6 +34,8 @@ transparent_background = 'rgba(0,0,0,0)'
 # Visualistions colors
 antitoxin_color = 'darkgreen'
 toxin_color = 'darkred'
+wedge_non_highlight = '#6d8aa6'
+wedge_highlight = '#6d8aa6'
 
 
 # ---------------------------- CALLBACKS -------------------------------
@@ -357,48 +359,149 @@ def update_sunburst_level(level=None, search_term=None):
     if search_term != None:
         # 1. Search by accession
         if search_term.startswith('WP_'):
+            df = df_netflax.copy()
             # Filter the dataframe for the selected search term
-            mask = (df_netflax['at_accession'].str.contains(search_term, case=False)) | (df_netflax['t_accession'].str.contains(search_term, case=False))
-            filtered_df = df_netflax.loc[mask]
-            
+            mask = (df['at_accession'].str.contains(search_term, case=False)) | (df['t_accession'].str.contains(search_term, case=False))
+            filtered_df = df.loc[mask]
+
+            # Get the last ring based on the taxa of the selected row
+            last_ring = ""
+            if len(filtered_df[filtered_df['at_accession'] == search_term]['taxa'].values) > 0:
+                last_ring = filtered_df[filtered_df['at_accession'] == search_term]['taxa'].values[0]
+            elif len(filtered_df[filtered_df['t_accession'] == search_term]['taxa'].values) > 0:
+                last_ring = filtered_df[filtered_df['t_accession'] == search_term]['taxa'].values[0]
+
+
+            # Set the color of the matching segment to red
+            df['color'] = 'gray'
+            df.loc[df['taxa'] == last_ring, 'color'] = 'red'
+
+
             # Create the sunburst for the whole dataset
             fig = px.sunburst(
-                data_frame=df_netflax,
+                data_frame=df,
                 path=paths[6],
-                color='superkingdom',
+                color='color',
+                color_discrete_map={'gray': 'gray', 'red': 'red'},
                 color_discrete_sequence=px.colors.qualitative.Pastel,
                 branchvalues='total'
             )
 
-            # Get the last ring based on the taxa of the selected row
-            last_ring = filtered_df[filtered_df['at_accession'] == search_term]['taxa'].values[0]
-            if last_ring == '':
-                last_ring  = filtered_df[filtered_df['t_accession'] == search_term]['taxa'].values[0]
-
-            # Change the color of the selected trace to red and update the outline width
-            for i, trace in enumerate(fig['data']):
-                if trace['ids'][0].split("/")[-1] == last_ring:
-                    trace['marker']['line']['color'] = 'red'
-                    default_marker_line_color = 'red'  # Update the default color
-                else:
-                    trace['marker']['line']['color'] = page_background
-
             fig.update_traces(
-                marker=dict(line=dict(color=[trace['marker']['line']['color'] for trace in fig['data']], width=0.5)),
+                marker=dict(line=dict(color=page_background, width=0.5)),
                 hovertemplate='<b>%{label} </b> <br>Taxonomy: %{id}<br>Number of TAs: %{value}',
             )
             fig.update_layout(
                 plot_bgcolor=transparent_background,
                 paper_bgcolor=transparent_background
             )
-            return fig
+
+            sunburst_fig = fig
+            # Filter netflax_df by the search term
+            dataset = df_netflax[df_netflax.values == search_term]
+            
+            return sunburst_fig, dataset 
 
         # 2. Search by node      
-        elif search_term.startswith('D') or search_term.startswith('M'):
-            print('Hi')
+        elif search_term.startswith('D') or search_term.startswith('M') or search_term.startswith('Panacea'):
+            # Filter the dataframe for the selected search term
+            df = df_netflax.copy()
+            mask = (df['at_domain'].str.contains(search_term, case=False)) | (df['t_domain'].str.contains(search_term, case=False))
+            filtered_df = df.loc[mask]
+
+            # Get the last ring based on the taxa of the selected row
+            last_ring = ""
+            if len(filtered_df[filtered_df['at_domain'] == search_term]['taxa'].values) > 0:
+                last_ring = filtered_df[filtered_df['at_domain'] == search_term]['taxa'].values[0]
+            elif len(filtered_df[filtered_df['t_domain'] == search_term]['taxa'].values) > 0:
+                last_ring = filtered_df[filtered_df['t_domain'] == search_term]['taxa'].values[0]
+
+            # Set the color of all matching segments to lightblue
+            df['color'] = 'gray'
+            for index, row in filtered_df.iterrows():
+                df.loc[df['taxa'] == row['taxa'], 'color'] = 'lightblue'
+
+            # Create the sunburst for the whole dataset
+            fig = px.sunburst(
+                data_frame=df,
+                path=paths[6],
+                color='color',
+                color_discrete_map={'gray': 'gray', 'lightblue': 'lightblue'},
+                color_discrete_sequence=px.colors.qualitative.Pastel,
+                branchvalues='total'
+            )
+
+            fig.update_traces(
+                marker=dict(line=dict(color=page_background, width=0.5)),
+                hovertemplate='<b>%{label} </b> <br>Taxonomy: %{id}<br>Number of TAs: %{value}',
+            )
+            fig.update_layout(
+                plot_bgcolor=transparent_background,
+                paper_bgcolor=transparent_background
+            )
+
+            sunburst_fig = fig
+            # Filter netflax_df by the search term
+            dataset = df_netflax[df_netflax.values == search_term]
+            
+            return sunburst_fig, dataset 
+
+
         # 3. Search by taxonomy at any level
         else:
-            print('Hi')
+            df = df_netflax.copy()
+             # Set the color of the matching segment to red
+            df['color'] = 'gray'
+
+            # Determine in which column the search term is present
+            if search_term in df['superkingdom'].values:
+                level = 0
+                df.loc[df['superkingdom'] == search_term, 'color'] = 'red'
+            elif search_term in df['phylum'].values:
+                level = 1
+                df.loc[df['phylum'] == search_term, 'color'] = 'red'
+            elif search_term in df['class'].values:
+                level = 2
+                df.loc[df['class'] == search_term, 'color'] = 'red'
+            elif search_term in df['order'].values:
+                level = 3
+                df.loc[df['order'] == search_term, 'color'] = 'red'
+            elif search_term in df['family'].values:
+                level = 4
+                df.loc[df['family'] == search_term, 'color'] = 'red'
+            elif search_term in df['genus'].values:
+                level = 5
+                df.loc[df['genus'] == search_term, 'color'] = 'red'
+            elif search_term in df['taxa'].values:
+                level = 6
+                df.loc[df['taxa'] == search_term, 'color'] = 'red'
+            else:
+                print(f'{search_term} does not exist')
+
+            # Create the sunburst for the filtered dataset
+            fig = px.sunburst(
+                data_frame=df,
+                path=paths[level],
+                color='color',
+                color_discrete_map={'gray': 'gray', 'red': 'red'},
+                color_discrete_sequence=px.colors.qualitative.Pastel,
+                branchvalues='total'
+            )
+
+            fig.update_traces(
+                marker=dict(line=dict(color=page_background, width=0.5)),
+                hovertemplate='<b>%{label} </b> <br>Taxonomy: %{id}<br>Number of TAs: %{value}',
+            )
+            fig.update_layout(
+                plot_bgcolor=transparent_background,
+                paper_bgcolor=transparent_background
+            )
+
+            sunburst_fig = fig
+            # Filter netflax_df by the search term
+            dataset = df_netflax[df_netflax.values == search_term]
+            
+            return sunburst_fig, dataset 
 
     # ------------------------------ SLIDER ----------------------------
 
@@ -422,4 +525,6 @@ def update_sunburst_level(level=None, search_term=None):
         plot_bgcolor = transparent_background,
         paper_bgcolor = transparent_background)
     
-    return fig
+    sunburst_fig = fig
+
+    return sunburst_fig, dataset
