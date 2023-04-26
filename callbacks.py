@@ -249,28 +249,6 @@ def search_results(search_term):
 
 
 
-# Update callback for Molecule3dViewer
-@callback(
-    Output('molecule-info-container', 'children'),
-    Input('dashbio-default-molecule3d', 'selectedAtomIds')
-)
-def display_molecule_info(click_info):
-    if click_info is None:
-        return html.Div()  # Return empty div if no click info available
-    else:
-        atom_id = click_info['atom']
-        chain_id = click_info['chain']
-        element = click_info['elem']
-        residue_name = click_info['residue_name']
-
-        return html.Div([
-            html.Div(f'Element: {element}'),
-            html.Div(f'Chain: {chain_id}'),
-            html.Div(f'Residue name: {residue_name}'),
-            html.Br()
-        ])
-
-
 # Callback 3. Linking the Sunburst chart with the Taxonomy barplot
 @callback(
     Output('a2_taxonomy_barplot', 'figure'),
@@ -330,6 +308,20 @@ def display_selected_kingdom(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # SLIDER FOR TAXONOMIC LEVEL
 # create a list of paths with different number of levels
 paths = {
@@ -344,6 +336,7 @@ paths = {
 
 @callback(
     Output('a1_taxonomy_sunburst', 'figure'),
+    Output('results-container', 'children'),
     Input('taxonomy_level_slider', 'value'),
     Input('search-dropdown', 'value')
 )
@@ -396,11 +389,50 @@ def update_sunburst_level(level=None, search_term=None):
                 paper_bgcolor=transparent_background
             )
 
+            # Get structure for protein
+            structure_data, styles = get_structural_data(search_term)
+            
+            # Prepare output
             sunburst_fig = fig
-            # Filter netflax_df by the search term
             dataset = df_netflax[df_netflax.values == search_term]
             
-            return sunburst_fig, dataset 
+            return sunburst_fig, html.Div(
+            children=[
+                dbc.Row([
+                    html.H4(f'Search results for "{search_term}"'),
+                    dbc.Row([
+                        'InfoBox'
+                    ]),
+                    dbc.Row([
+                        dbc.Col([
+
+                        ]),
+                        dbc.Col([
+
+                        ])
+                    ]),
+                    dbc.Row([
+                        dashbio.Molecule3dViewer(
+                            id = 'dashbio-default-molecule3d',
+                            modelData = structure_data,
+                            styles = styles)
+                    ]),
+                    dbc.Row([
+                        "Selection data",
+                        html.Hr(),
+                        html.Div(id = 'molecule-info-container')
+                    ]),
+                    dbc.Row([
+                        'Filtered NetFlax Table Results',
+                        dash_table.DataTable(
+                            id = 'table',
+                            data = dataset.to_dict('records'),
+                            fixed_rows = {'headers': True},
+                            style_cell = {'minWidth': 95, 'maxWidth': 95, 'width': 95})
+                    ]),
+                ]),
+            ]
+        )    
 
         # 2. Search by node      
         elif search_term.startswith('D') or search_term.startswith('M') or search_term.startswith('Panacea'):
@@ -444,7 +476,38 @@ def update_sunburst_level(level=None, search_term=None):
             # Filter netflax_df by the search term
             dataset = df_netflax[df_netflax.values == search_term]
             
-            return sunburst_fig, dataset 
+            return sunburst_fig, html.Div(
+            children=[
+                dbc.Row([
+                    html.H4(f'Search results for "{search_term}"'),
+                    dbc.Row([
+                        'InfoBox'
+                    ]),
+                    dbc.Row([
+                        dbc.Col([
+
+                        ]),
+                        dbc.Col([
+
+                        ])
+                    ]),
+                    dbc.Row([
+                        "Selection data",
+                        html.Hr(),
+                        html.Div(id = 'molecule-info-container')
+                    ]),
+                    dbc.Row([
+                        'Filtered NetFlax Table Results',
+                        dash_table.DataTable(
+                            id = 'table',
+                            data = dataset.to_dict('records'),
+                            fixed_rows = {'headers': True},
+                            style_cell = {'minWidth': 95, 'maxWidth': 95, 'width': 95})
+                    ]),
+                ]),
+            ]
+        )    
+ 
 
 
         # 3. Search by taxonomy at any level
@@ -501,7 +564,38 @@ def update_sunburst_level(level=None, search_term=None):
             # Filter netflax_df by the search term
             dataset = df_netflax[df_netflax.values == search_term]
             
-            return sunburst_fig, dataset 
+            return sunburst_fig, html.Div(
+            children=[
+                dbc.Row([
+                    html.H4(f'Search results for "{search_term}"'),
+                    dbc.Row([
+                        'InfoBox'
+                    ]),
+                    dbc.Row([
+                        dbc.Col([
+
+                        ]),
+                        dbc.Col([
+
+                        ])
+                    ]),
+                    dbc.Row([
+                        "Selection data",
+                        html.Hr(),
+                        html.Div(id = 'molecule-info-container')
+                    ]),
+                    dbc.Row([
+                        'Filtered NetFlax Table Results',
+                        dash_table.DataTable(
+                            id = 'table',
+                            data = dataset.to_dict('records'),
+                            fixed_rows = {'headers': True},
+                            style_cell = {'minWidth': 95, 'maxWidth': 95, 'width': 95})
+                    ]),
+                ]),
+            ]
+        )    
+ 
 
     # ------------------------------ SLIDER ----------------------------
 
@@ -527,4 +621,66 @@ def update_sunburst_level(level=None, search_term=None):
     
     sunburst_fig = fig
 
-    return sunburst_fig, dataset
+    return sunburst_fig, html.Div(
+            children=[
+                dbc.Row([
+                    html.H4(f'Search results for "{search_term}"'),
+                    dbc.Row([
+                        'InfoBox'
+                    ]),
+                    dbc.Row([
+                        dbc.Col([
+
+                        ]),
+                        dbc.Col([
+
+                        ])
+                    ]),
+                    dbc.Row([
+                        "Selection data",
+                        html.Hr(),
+                        html.Div(id = 'molecule-info-container')
+                    ]),
+                    dbc.Row([
+                        'Filtered NetFlax Table Results',
+                        dash_table.DataTable(
+                            id = 'table',
+                            data = dataset.to_dict('records'),
+                            fixed_rows = {'headers': True},
+                            style_cell = {'minWidth': 95, 'maxWidth': 95, 'width': 95})
+                    ]),
+                ]),
+            ]
+        )    
+ 
+
+
+
+
+
+
+
+
+
+
+
+    # Update callback for Molecule3dViewer
+@callback(
+    Output('molecule-info-container', 'children'),
+    Input('dashbio-default-molecule3d', 'selectedAtomIds')
+)
+def display_molecule_info(click_info):
+    if click_info is None:
+        return html.Div()  # Return empty div if no click info available
+    else:
+        atom_id = click_info['atom']
+        chain_id = click_info['chain']
+        element = click_info['elem']
+        residue_name = click_info['residue_name']
+
+        return html.Div([
+            html.Div(f'Element: {element}'),
+            html.Div(f'Chain: {chain_id}'),
+            html.Div(f'Residue name: {residue_name}'),
+            html.Br()
+        ])

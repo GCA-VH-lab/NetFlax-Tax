@@ -106,16 +106,19 @@ layout = html.Div([
                 ]),
                 dbc.Row([
                     dcc.Loading(
-                        
-                    )
+                        id='result-container-loading', 
+                        type='circle', 
+                        fullscreen = True, 
+                        children = [
+                            html.Div(
+                                id = 'results-container', 
+                                style = {
+                                    'textAlign': 'center',
+                                    'padding': '10px',
+                                    'justify-content': 'center',
+                                })
+                    ])
                 ]), 
-                dbc.Row([
-                    html.H5('Filtered NetFlax Table Results'),
-                    dash_table.DataTable(
-                        id = 'table',
-                        data = update_sunburst_level()[1].to_dict("records"),
-                    )
-                ])
             ],  width={
                     'size': 4, 
                     'offset': 0}, 
