@@ -18,6 +18,7 @@ import dash_cytoscape as cyto
 import stat 
 from support_functions import taxonomy_distribution_table, taxonomy_distribution_barplot
 from test_protein_viewer import structure_file, get_structural_data, create_mol3d_style
+from functions.protein_logos.protein_coords import *
 
 
 #
@@ -388,51 +389,40 @@ def update_sunburst_level(level=None, search_term=None):
                 plot_bgcolor=transparent_background,
                 paper_bgcolor=transparent_background
             )
-
-            # Get structure for protein
-            structure_data, styles = get_structural_data(search_term)
             
             # Prepare output
             sunburst_fig = fig
             dataset = df_netflax[df_netflax.values == search_term]
             
+            # Get structure for protein
+            structure_data, styles, chain_sequence = visualising_protein(search_term)
+            
             return sunburst_fig, html.Div(
-            children=[
-                dbc.Row([
-                    html.H4(f'Search results for "{search_term}"'),
+                children=[
                     dbc.Row([
-                        'InfoBox'
-                    ]),
-                    dbc.Row([
-                        dbc.Col([
-
+                        html.H4(f'Search results for "{search_term}"'),
+                        dbc.Row([
+                            'InfoBox'
                         ]),
-                        dbc.Col([
-
+                        dbc.Row([
+                            dbc.Col([
+                                dashbio.Molecule3dViewer(
+                                    id='dashbio-default-molecule3d',
+                                    modelData=structure_data,
+                                    styles=styles
+                                )
+                            ]),
+                            dbc.Col([
+                                dashbio.SequenceViewer(
+                                    id='dashbio-default-sequenceviewer',
+                                    sequence=chain_sequence,
+                                    title=f'Protein Sequence ({antitoxin}/{toxin})'
+                                )
+                            ])
                         ])
-                    ]),
-                    dbc.Row([
-                        dashbio.Molecule3dViewer(
-                            id = 'dashbio-default-molecule3d',
-                            modelData = structure_data,
-                            styles = styles)
-                    ]),
-                    dbc.Row([
-                        "Selection data",
-                        html.Hr(),
-                        html.Div(id = 'molecule-info-container')
-                    ]),
-                    dbc.Row([
-                        'Filtered NetFlax Table Results',
-                        dash_table.DataTable(
-                            id = 'table',
-                            data = dataset.to_dict('records'),
-                            fixed_rows = {'headers': True},
-                            style_cell = {'minWidth': 95, 'maxWidth': 95, 'width': 95})
-                    ]),
-                ]),
-            ]
-        )    
+                    ])
+                ]
+            )  
 
         # 2. Search by node      
         elif search_term.startswith('D') or search_term.startswith('M') or search_term.startswith('Panacea'):

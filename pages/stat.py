@@ -94,13 +94,13 @@ layout = html.Div([
                 dbc.Row([
                     html.Br(),
                     dcc.Loading(
-                        id='result-container-loading', 
-                        type='circle', 
-                        fullscreen=True, 
-                        children=[
+                        id = 'result-container-loading', 
+                        type = 'circle', 
+                        fullscreen = True, 
+                        children = [
                             html.Div(
-                                id='result-container', 
-                                style={'textAlign': 'center'})
+                                id = 'result-container', 
+                                style = {'textAlign': 'center'})
                     ])
                 ], style={
                     'marginTop': '5px',
