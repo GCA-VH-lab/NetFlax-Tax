@@ -1,6 +1,8 @@
 import pandas as pd
 import requests
 import dash
+from urllib.request import urlopen
+from io import StringIO
 from dash_bio.utils import PdbParser, create_mol3d_style
 from Bio.PDB import PDBParser, Polypeptide
 
@@ -74,38 +76,29 @@ def structure_file(accession):
     return pdb_file, antitoxin, toxin, chain_colors
 
 
-# def visualising_protein(search_term):
-#     pdb_parser = PdbParser(structure_file(search_term)[0])
-#     structure_data = pdb_parser.mol3d_data()
-#     styles = create_mol3d_style(
-#         structure_data['atoms'], visualization_type='cartoon', color_element='chain'
-#     )
-#     return structure_data, styles
-
-
 def visualising_protein(search_term):
-    pdb_file, antitoxin, toxin, chain_colors = structure_file(search_term)
-    pdb_parser = PDBParser()
-    structure = pdb_parser.get_structure('structure', pdb_file)
+    pdb_url, antitoxin, toxin, chain_colors = structure_file(search_term)
+    pdb_parser = PdbParser(pdb_url)
+    structure_data = pdb_parser.mol3d_data()
 
-    # Get the sequence of the protein chain
-    chain_sequence = ''
-    for chain in structure.get_chains():
-        if chain.id == antitoxin or chain.id == toxin:
+    # color_scheme = {}
+    # for chain in structure_data['atoms'][0]['chain']:
+    #     if chain == 'A':
+    #         color_scheme[chain] = chain_colors['A']
+    #     elif chain == 'B':
+    #         color_scheme[chain] = chain_colors['B']
+
+    chain_sequence = ""
+    for chain in structure_data['atoms'][0]['chain']:
+        if chain == antitoxin or chain == toxin:
             chain_sequence = Polypeptide.one_to_three(chain.get_sequence())
             break
 
-    structure_data = {
-        'atoms': pdb_parser.get_structure('structure', pdb_file).get_atoms(),
-        'bonds': pdb_parser.get_structure('structure', pdb_file).get_bonds(),
-    }
-
-    # Create the style for the protein structure
     styles = create_mol3d_style(
         structure_data['atoms'], 
         visualization_type = 'cartoon', 
         color_element = 'chain',
-        #color_scheme = chain_colors
+        color_scheme = chain_colors
     )
 
     return structure_data, styles, chain_sequence

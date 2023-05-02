@@ -416,7 +416,7 @@ def update_sunburst_level(level=None, search_term=None):
                                 dashbio.SequenceViewer(
                                     id='dashbio-default-sequenceviewer',
                                     sequence=chain_sequence,
-                                    title=f'Protein Sequence ({antitoxin}/{toxin})'
+                                    #title=f'Protein Sequence ({antitoxin}/{toxin})'
                                 )
                             ])
                         ])
