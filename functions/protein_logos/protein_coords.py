@@ -60,13 +60,13 @@ def structure_file(accession):
     if accession in df_netflax['at_accession'].values:
         antitoxin = accession_chain
         toxin = complement_chain
-        chain_a_color = 'green'
-        chain_b_color = 'red'
+        chain_a_color = 'lightgreen'
+        chain_b_color = 'pink'
     elif complement_chain in df_netflax['t_accession'].values:
         toxin = accession_chain
         antitoxin = complement_chain
-        chain_a_color = 'red'
-        chain_b_color = 'green'
+        chain_a_color = 'pink'
+        chain_b_color = 'lightgreen'
     else:
         # Handle unexpected values in the DataFrame
         raise ValueError('Invalid DataFrame values')
