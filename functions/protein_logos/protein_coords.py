@@ -81,13 +81,6 @@ def visualising_protein(search_term):
     pdb_parser = PdbParser(pdb_url)
     structure_data = pdb_parser.mol3d_data()
 
-    # color_scheme = {}
-    # for chain in structure_data['atoms'][0]['chain']:
-    #     if chain == 'A':
-    #         color_scheme[chain] = chain_colors['A']
-    #     elif chain == 'B':
-    #         color_scheme[chain] = chain_colors['B']
-
     chain_sequence = ""
     for chain in structure_data['atoms'][0]['chain']:
         if chain == antitoxin or chain == toxin:
