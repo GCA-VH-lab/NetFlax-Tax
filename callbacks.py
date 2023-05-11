@@ -396,7 +396,7 @@ def update_sunburst_level(level=None, search_term=None):
             dataset = df_netflax[df_netflax.values == search_term]
 
             # Get protein logos
-            fig_antitoxin, fig_toxin = create_protein_logos(search_term, 'yes')
+            fig_antitoxin, fig_toxin = create_protein_logos(search_term)
             
             # Get structure for protein
             structure_data, styles, chain_sequence = visualising_protein(search_term)
@@ -412,12 +412,13 @@ def update_sunburst_level(level=None, search_term=None):
                                     id='antitoxin-logo', 
                                     figure=fig_antitoxin, 
                                     )
-                            ], width=6),
+                            ], width=5),
+                            dbc.Col(width=2),
                             dbc.Col([
                                 dcc.Graph(
                                     id='toxin-logo', 
                                     figure=fig_toxin)
-                            ], width=6)
+                            ], width=5)
                         ]),
                         dbc.Row([
                             dbc.Col([

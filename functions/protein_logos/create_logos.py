@@ -6,6 +6,7 @@ from io import StringIO
 from dash_bio.utils import PdbParser, create_mol3d_style
 from Bio.PDB import PDBParser, Polypeptide
 from functions.protein_logos.protein_coords import *
+#from protein_coords import structure_file, visualising_protein
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
@@ -162,15 +163,15 @@ def create_fig(protein_coords_df, relevant_domains_df, antitoxin, domain_color):
     xList_domain = []
     yList_domain = []
 
-    arrow_head = 15
-    arrow_width = 1
-    top_domain = 0.33
-    top_domain_opacity = 0.7
-    middle_domain = 0.33
-    middle_domain_opacity = 0.7
-    bottom_domain = 0.33
-    bottom_domain_opacity = 0.5
-    y_level_m = 0
+    divide_by = 10 
+
+    arrow_head = 30/divide_by
+    arrow_width = 6/divide_by
+
+    y_level = 0
+    y_coords = 3/divide_by
+
+    domain_opacity = 0.7
 
     # 1. Merging the two traces into one plot
     fig = make_subplots(shared_yaxes=True, shared_xaxes=True)    
@@ -179,63 +180,39 @@ def create_fig(protein_coords_df, relevant_domains_df, antitoxin, domain_color):
     for i, row in protein_coords_df.iterrows():
         if row['accession'] == antitoxin:
             protein_start = 1
-            protein_end = (row['size'])/2
+            protein_end = (row['size'])
             x_axis = protein_end * 15
 
             xList_gene = [protein_start, protein_start, protein_end-arrow_head, protein_end, protein_end-arrow_head, protein_start]
-            yList_gene = [y_level_m-arrow_width, y_level_m+arrow_width, y_level_m+arrow_width, y_level_m, y_level_m-arrow_width, y_level_m-arrow_width]
+            yList_gene = [y_level-arrow_width, y_level+arrow_width, y_level+arrow_width, y_level, y_level-arrow_width, y_level-arrow_width]
             arrowList.append(fig.add_trace(go.Scatter(x=xList_gene, y=yList_gene, fill="toself", fillcolor='#d9d9d9', opacity=0.5, line=(dict(color='#bfbfc0')), mode='lines+text')))
 
             for i, row in relevant_domains_df.iterrows():
                 domain_protein = row['Accession']
                 database = row['database']
                 domain_name = row['domain']
-                domain_start = int(row['temp_hmm'].split('-')[0])/2
-                domain_end = int(row['temp_hmm'].split('-')[1])/2
+                domain_start = int(row['query_hmm'].split('-')[0])
+                domain_end = int(row['query_hmm'].split('-')[1])
                 domain_size = domain_end - domain_start
                 domain_abundance = row['score']
                 domain_color = domain_color
 
-                if database == 'pfam' and domain_protein == antitoxin:
-                    y_level_d = y_level_m + 2
-                    if antitoxin == domain_protein:
-                        xList_domain = [domain_start, domain_start, protein_end-arrow_head, (protein_end-arrow_head) + (protein_end-domain_end), (protein_end-arrow_head) + (protein_end-domain_end), protein_end-arrow_head, domain_start]
-                        yList_domain = [y_level_d-top_domain, y_level_d+top_domain, y_level_d+top_domain, y_level_d+top_domain/2,  y_level_d-top_domain/2, y_level_d-top_domain, y_level_d-top_domain]
-                        domainList.append(fig.add_trace(go.Scatter(x=xList_domain, y=yList_domain, fill="toself", hoverinfo = 'none', fillcolor=domain_color, line=dict(color=domain_color, width = 0), opacity = top_domain_opacity, mode='lines', name = domain_name)))                                     
+                if antitoxin == domain_protein:
+                    xList_domain = [domain_start, domain_start, domain_end, domain_end, domain_start]
+                    yList_domain = [y_level-y_coords, y_level+y_coords, y_level+y_coords, y_level-y_coords,  y_level-y_coords]
+                    domainList.append(fig.add_trace(go.Scatter(x=xList_domain, y=yList_domain, fill="toself", hoverinfo = 'none', fillcolor=domain_color, line=dict(color=domain_color, width = 0), opacity = domain_opacity, mode='lines', name = domain_name)))                                     
 
-                    # 6c. Placing domain anontation above the domain.
-                    text_x = domain_start + (domain_size/2)
-                    fig.add_annotation(x = text_x, y = y_level_d, xref='x', yref='y', text = domain_name, font = dict(color = "black", size = 8, family = "Open Sans"), showarrow = False)
-                
-                elif database == 'cdd' and domain_protein == antitoxin:
-                    y_level_d = y_level_m
-                    if antitoxin == domain_protein:
-                        xList_domain = [domain_start, domain_start, protein_end-arrow_head, (protein_end-arrow_head) + (protein_end-domain_end), (protein_end-arrow_head) + (protein_end-domain_end), protein_end-arrow_head, domain_start]
-                        yList_domain = [y_level_d-top_domain, y_level_d+top_domain, y_level_d+top_domain, y_level_d+top_domain/2,  y_level_d-top_domain/2, y_level_d-top_domain, y_level_d-top_domain]
-                        domainList.append(fig.add_trace(go.Scatter(x=xList_domain, y=yList_domain, fill="toself", hoverinfo = 'none', fillcolor=domain_color, line=dict(color=domain_color, width = 0), opacity = top_domain_opacity, mode='lines', name = domain_name)))                                     
-
-                    # 6c. Placing domain anontation above the domain.
-                    text_x = domain_start + (domain_size/2)
-                    fig.add_annotation(x = text_x, y = y_level_d, xref='x', yref='y', text = domain_name, font = dict(color = "black", size = 8, family = "Open Sans"), showarrow = False)
-
-                elif database == 'pdb' and domain_protein == antitoxin:
-                    y_level_d = y_level_m - 2
-                    if antitoxin == domain_protein:
-                        xList_domain = [domain_start, domain_start, protein_end-arrow_head, (protein_end-arrow_head) + (protein_end-domain_end), (protein_end-arrow_head) + (protein_end-domain_end), protein_end-arrow_head, domain_start]
-                        yList_domain = [y_level_d-top_domain, y_level_d+top_domain, y_level_d+top_domain, y_level_d+top_domain/2,  y_level_d-top_domain/2, y_level_d-top_domain, y_level_d-top_domain]
-                        domainList.append(fig.add_trace(go.Scatter(x=xList_domain, y=yList_domain, fill="toself", hoverinfo = 'none', fillcolor=domain_color, line=dict(color=domain_color, width = 0), opacity = top_domain_opacity, mode='lines', name = domain_name)))                                     
-
-                    # 6c. Placing domain anontation above the domain.
-                    text_x = domain_start + (domain_size/2)
-                    fig.add_annotation(x = text_x, y = y_level_d, xref='x', yref='y', text = domain_name, font = dict(color = "black", size = 8, family = "Open Sans"), showarrow = False)
+                # 6c. Placing domain anontation above the domain.
+                text_x = domain_start + (domain_size/2)
+                fig.add_annotation(x = text_x, y = y_level, xref='x', yref='y', text = domain_name, font = dict(color = "black", size = 8, family = "Open Sans"), showarrow = False)
 
             # 9. Graph layout
             fig.update_xaxes(visible = False)
             fig.update_yaxes(
                 visible = True, 
                 showgrid = False, 
-                showline = False, 
-                autorange = True, 
+                showline = False,
+                range = [-2, 2], 
                 automargin = True, 
                 showticklabels = False, 
                 titlefont = dict(family = 'Open Sans', size = 8))
@@ -253,7 +230,7 @@ def create_fig(protein_coords_df, relevant_domains_df, antitoxin, domain_color):
 
 
 
-def create_protein_logos(protein_accession, include_pdb='no'):
+def create_protein_logos(protein_accession):
     '''
     Drawing the logo for the antitoxin and toxin including the top 
     domains hit for pfam and cdd database.
@@ -269,17 +246,15 @@ def create_protein_logos(protein_accession, include_pdb='no'):
     protein_coords_df, antitoxin, toxin = protein_coords(protein_accession)
 
     # Get the relevant domains
-    if include_pdb == 'yes': 
-        df_domains = df_domains_original
-        df_domains = df_domains[df_domains['db_rank'] == 1]
-    elif include_pdb == 'no':
-        df_domains = df_domains_original[~df_domains_original['database'].str.contains('pdb')]
-        df_domains = df_domains[df_domains['db_rank'] == 1]
-    else:
-        return print('Only acceptable strings are "yes" or "no"')
+    df_domains = df_domains_original[df_domains_original['Accession'].isin([antitoxin, toxin])]
     
+    # Find the index of the rows with the highest 'prob' value for each 'acc'
+    highest_prob_rows = df_domains.groupby('Accession')['prob'].idxmax()
+    df_top_domains = df_domains.loc[highest_prob_rows]
+
+
     # Fetch the relevant domains
-    relevant_domains_df = find_domains(antitoxin, toxin, df_domains, 'Accession')
+    relevant_domains_df = find_domains(antitoxin, toxin, df_top_domains, 'Accession')
 
     # Drawing the antitoxin logo
     fig_antitoxin = create_fig(protein_coords_df, relevant_domains_df, antitoxin, 'green')
@@ -287,6 +262,11 @@ def create_protein_logos(protein_accession, include_pdb='no'):
     # Drawing the toxin logo
     fig_toxin = create_fig(protein_coords_df, relevant_domains_df, toxin, 'red')
 
+    fig_antitoxin.show()
+    fig_toxin.show()
+
     return fig_antitoxin, fig_toxin
         
     
+
+# create_protein_logos('WP_013360663.1', 'yes')
