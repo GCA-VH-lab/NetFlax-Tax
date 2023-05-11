@@ -19,6 +19,7 @@ import stat
 from support_functions import taxonomy_distribution_table, taxonomy_distribution_barplot
 from test_protein_viewer import structure_file, get_structural_data, create_mol3d_style
 from functions.protein_logos.protein_coords import *
+from functions.protein_logos.create_logos import *
 
 
 #
@@ -393,16 +394,30 @@ def update_sunburst_level(level=None, search_term=None):
             # Prepare output
             sunburst_fig = fig
             dataset = df_netflax[df_netflax.values == search_term]
+
+            # Get protein logos
+            fig_antitoxin, fig_toxin = create_protein_logos(search_term, 'yes')
             
             # Get structure for protein
             structure_data, styles, chain_sequence = visualising_protein(search_term)
+
             
             return sunburst_fig, html.Div(
                 children=[
                     dbc.Row([
                         html.H4(f'Search results for "{search_term}"'),
                         dbc.Row([
-                            'InfoBox'
+                            dbc.Col([
+                                dcc.Graph(
+                                    id='antitoxin-logo', 
+                                    figure=fig_antitoxin, 
+                                    )
+                            ], width=6),
+                            dbc.Col([
+                                dcc.Graph(
+                                    id='toxin-logo', 
+                                    figure=fig_toxin)
+                            ], width=6)
                         ]),
                         dbc.Row([
                             dbc.Col([
