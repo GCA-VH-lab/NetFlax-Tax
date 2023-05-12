@@ -10,9 +10,22 @@ from functions.protein_logos.protein_coords import *
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
+# --------------------------- LAYOUT SPEC ------------------------------
+
+page_background = '#F6F6F6'
+container_background = '#ECECEC'
+transparent_background = 'rgba(0,0,0,0)'
+
+# Visualistions colors
+antitoxin_color = 'darkgreen'
+toxin_color = 'darkred'
+wedge_non_highlight = '#6d8aa6'
+wedge_highlight = '#6d8aa6'
 
 
-# DATASETS
+
+# ---------------------------- DATASETS --------------------------------
+
 df_all = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
 df_netflax = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
 df_domains_original = pd.read_csv('./data/domains.txt', sep = '\t', header = 0)
@@ -20,6 +33,9 @@ df_domains_original = pd.read_csv('./data/domains.txt', sep = '\t', header = 0)
 # Filtering out the pdb rows of the domains file
 df_domains = df_domains_original[~df_domains_original['database'].str.contains('pdb')]   # NOTE! pdb domain searches are ignored
 
+
+
+# ---------------------------- FUNCTIONS -------------------------------
 
 def find_domains(antitoxin, toxin, dataset, accession_row):
     '''
@@ -91,24 +107,25 @@ def protein_coords(protein_accession):
     '''
     
     # Get the structure file
-    pdb_url, antitoxin, toxin, chain_colors = structure_file(protein_accession)
+    pdb_url, antitoxin, toxin, chain_colors, chain_a, chain_b = structure_file(protein_accession)
 
     # Read the pdb files
     pdb_parser = PdbParser(pdb_url)
     structure_data = pdb_parser.mol3d_data()
 
     # Get the lenght of the chains from the pdb file
-    chain_a = count_residues(structure_data, 'A')
-    chain_b = count_residues(structure_data, 'B')
+    chain_a_size = count_residues(structure_data, 'A')
+    chain_b_size = count_residues(structure_data, 'B')
 
     # Assign size to proper accession
-    if protein_accession == antitoxin:
-        data = {'accession': [antitoxin, toxin], 'size': [chain_a, chain_b]}
+    if protein_accession == chain_a:
+        data = {'accession': [antitoxin, toxin], 'size': [chain_a_size, chain_b_size]}
     elif protein_accession == toxin: 
-        data = {'accession': [antitoxin, toxin], 'size': [chain_b, chain_a]}
+        data = {'accession': [antitoxin, toxin], 'size': [chain_b_size, chain_a_size]}
 
     # Create a dataframe with the accession numbers and residue counts
     protein_coords_df = pd.DataFrame(data)
+    print('WP_181273885.1')
 
     return protein_coords_df, antitoxin, toxin
 
@@ -163,13 +180,12 @@ def create_fig(protein_coords_df, relevant_domains_df, antitoxin, domain_color):
     xList_domain = []
     yList_domain = []
 
-    divide_by = 10 
+    divide_by = 10
+    factor_length = 1
 
-    arrow_head = 30/divide_by
-    arrow_width = 6/divide_by
+    arrow_width = 3/divide_by
 
     y_level = 0
-    y_coords = 3/divide_by
 
     domain_opacity = 0.7
 
@@ -180,8 +196,8 @@ def create_fig(protein_coords_df, relevant_domains_df, antitoxin, domain_color):
     for i, row in protein_coords_df.iterrows():
         if row['accession'] == antitoxin:
             protein_start = 1
-            protein_end = (row['size'])
-            x_axis = protein_end * 15
+            protein_end = (row['size'])*factor_length
+            arrow_head = ((protein_end-protein_start)*(1/8))*factor_length
 
             xList_gene = [protein_start, protein_start, protein_end-arrow_head, protein_end, protein_end-arrow_head, protein_start]
             yList_gene = [y_level-arrow_width, y_level+arrow_width, y_level+arrow_width, y_level, y_level-arrow_width, y_level-arrow_width]
@@ -191,20 +207,20 @@ def create_fig(protein_coords_df, relevant_domains_df, antitoxin, domain_color):
                 domain_protein = row['Accession']
                 database = row['database']
                 domain_name = row['domain']
-                domain_start = int(row['query_hmm'].split('-')[0])
-                domain_end = int(row['query_hmm'].split('-')[1])
-                domain_size = domain_end - domain_start
-                domain_abundance = row['score']
+                domain_start = (row['query_hmm'].split('-')[0])*factor_length
+                domain_end = int(row['query_hmm'].split('-')[1])*factor_length
+                domain_size = (domain_end - domain_start)*factor_length
+                domain_score = row['score']
                 domain_color = domain_color
 
                 if antitoxin == domain_protein:
                     xList_domain = [domain_start, domain_start, domain_end, domain_end, domain_start]
-                    yList_domain = [y_level-y_coords, y_level+y_coords, y_level+y_coords, y_level-y_coords,  y_level-y_coords]
+                    yList_domain = [y_level-arrow_width, y_level+arrow_width, y_level+arrow_width, y_level-arrow_width, y_level-arrow_width]
                     domainList.append(fig.add_trace(go.Scatter(x=xList_domain, y=yList_domain, fill="toself", hoverinfo = 'none', fillcolor=domain_color, line=dict(color=domain_color, width = 0), opacity = domain_opacity, mode='lines', name = domain_name)))                                     
 
-                # 6c. Placing domain anontation above the domain.
-                text_x = domain_start + (domain_size/2)
-                fig.add_annotation(x = text_x, y = y_level, xref='x', yref='y', text = domain_name, font = dict(color = "black", size = 8, family = "Open Sans"), showarrow = False)
+                    # 6c. Placing domain anontation above the domain.
+                    text_x = domain_start + (domain_size/2)
+                    fig.add_annotation(x = text_x, y = y_level, xref='x', yref='y', text = domain_name, font = dict(color = "black", size = 8, family = "Open Sans"), showarrow = False)
 
             # 9. Graph layout
             fig.update_xaxes(visible = False)
@@ -218,12 +234,12 @@ def create_fig(protein_coords_df, relevant_domains_df, antitoxin, domain_color):
                 titlefont = dict(family = 'Open Sans', size = 8))
             fig.update_layout(
                 autosize=False, 
-                width=400, 
+                width=300, 
                 height=300, 
                 margin=dict(l=10, r=10, t=10, b=10),
-                paper_bgcolor = 'white', 
-                plot_bgcolor = 'white', 
-                showlegend = True
+                paper_bgcolor = transparent_background, 
+                plot_bgcolor = transparent_background, 
+                showlegend = False
             )
             
     return fig
@@ -243,7 +259,7 @@ def create_protein_logos(protein_accession):
         antitoxin and toxin) as well as the toxin and antitoxin accession    
     '''
     # Get the protein coords file, antitoxin, and toxin accession
-    protein_coords_df, antitoxin, toxin = protein_coords(protein_accession)
+    protein_coords_df, antitoxin, toxin, chain_a, chain_b = protein_coords(protein_accession)
 
     # Get the relevant domains
     df_domains = df_domains_original[df_domains_original['Accession'].isin([antitoxin, toxin])]

@@ -71,9 +71,9 @@ def structure_file(accession):
         # Handle unexpected values in the DataFrame
         raise ValueError('Invalid DataFrame values')
     
-    chain_colors = {'A': chain_a_color,'B': chain_b_color,}
+    chain_colors = {'A': chain_a_color,'B': chain_b_color}
 
-    return pdb_file, antitoxin, toxin, chain_colors
+    return pdb_file, antitoxin, toxin, chain_colors, chain_a, chain_b
 
 
 def visualising_protein(search_term):

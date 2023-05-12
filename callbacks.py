@@ -413,7 +413,7 @@ def update_sunburst_level(level=None, search_term=None):
                                     figure=fig_antitoxin, 
                                     )
                             ], width=5),
-                            dbc.Col(width=2),
+                            dbc.Col(width=1),
                             dbc.Col([
                                 dcc.Graph(
                                     id='toxin-logo', 
