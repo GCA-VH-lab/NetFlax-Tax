@@ -1,37 +1,50 @@
+# NAVIGATING INSIDE THE APP
+
+# Import packages
 import dash
 from dash import html
-
 import dash_bootstrap_components as dbc
 
+# Import aesthetics specifics
+from assets.color_scheme import *
+
+
+
+
+# ------------------------- NAVIGATION BAR -----------------------------
 
 navbar = dbc.Navbar(
     dbc.Container([
+        # Navigation Bar, left hand side. The Application Title
         dbc.Row([
             dbc.Col([
-                #dbc.NavItem(dbc.NavLink('Home', href = '/')),
-                dbc.NavbarBrand('NetFlax Stats', className = 'ms-2', href = '/')
-            ]),
-            dbc.Col(
-                dbc.Nav([
-                    dbc.NavItem(dbc.NavLink('Search', href = '/search'))
-                ], navbar = True),
-            width = {'size': 'auto'})],
+                dbc.NavItem(dbc.NavLink('NetFlax Tax', href = '/')),
+            ], width = {'size': 'auto'})],
+            # If a second page is to be added here is an example of how
+            # dbc.Col([
+            #     dbc.Nav([
+            #         dbc.NavItem(dbc.NavLink('Second Page', href = '/secondpage'))
+            #     ], navbar = True),
         align = 'center', 
         className = 'g-0'),
+        # Navigation Bar, right hand side. Icons and links
         dbc.Row([
             dbc.Col([
                 dbc.Nav([
                     dbc.NavItem(
+                        # Link to NetFlax
                         dbc.NavLink(
-                            html.I(className = 'bi bi-flag-fill'),
-                            href = """http://webflags.se/""",
+                            html.I(className = 'bi bi-brightness-low-fill'),
+                            href = """https://server.atkinson-lab.com/netflax""",
                             external_link = True)),
                     dbc.NavItem(
+                        # Ling to Lab's GitHub
                         dbc.NavLink(
                             html.I(className = 'bi bi-github'),
                                 href = """https://github.com/GCA-VH-lab""",
                                 external_link = True)),
                     dbc.NavItem(
+                        # Link to Lab's Twitter
                         dbc.NavLink(
                             html.I(className = 'bi bi-twitter'),
                                 href = """https://twitter.com/webflags1?ref_src=twsrc%5Etfw%7Ctwcamp%5Eembeddedtimeline%7Ctwterm%5Escreen-name%3Awebflags1%7Ctwcon%5Es2""",
@@ -40,5 +53,5 @@ navbar = dbc.Navbar(
             ])
         ], align = 'center')
     ], fluid = True),
-    color = 'rgb(52,58,64)',
+    color = navigation_bar,
     dark = True)

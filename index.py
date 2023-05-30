@@ -2,7 +2,7 @@ from dash import html, dcc
 from dash.dependencies import Input, Output
 
 import app as app
-from pages import search, stat
+from pages import home
 
 application = app
 
@@ -14,10 +14,10 @@ app.layout = html.Div([
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/search':
-        return search.layout
+    if pathname == '/second_page':
+        return second_page.layout
     else:
-        return stat.layout
+        return home.layout
 
 
 if __name__ == '__main__':
