@@ -51,50 +51,85 @@ layout = html.Div([
                     }
                 ),
                 dbc.Row([
-                    html.H5('Taxonomic Level'),
                     html.Div([
-                            dcc.Slider(
-                                id='taxonomy_level_slider',
-                                min=0,
-                                max=6,
-                                step=1,
-                                value=3,
-                                marks={
-                                    0: {'label': 'Superkingdom'},
-                                    1: {'label': 'Phylum'},
-                                    2: {'label': 'Class'},
-                                    3: {'label': 'Order'},
-                                    4: {'label': 'Family'},
-                                    5: {'label': 'Genus'},
-                                    6: {'label': 'Species'}
-                                }
-                            ),
+                        dcc.Slider(
+                            id='taxonomy_level_slider',
+                            min=0,
+                            max=6,
+                            step=1,
+                            value=3,
+                            marks={
+                                0: {'label': 'Superkingdom'},
+                                1: {'label': 'Phylum'},
+                                2: {'label': 'Class'},
+                                3: {'label': 'Order'},
+                                4: {'label': 'Family'},
+                                5: {'label': 'Genus'},
+                                6: {'label': 'Species'}
+                            }
+                        ),
                     ], style={
                         'width': '80%', 
                         'margin': 'auto',
                         'background': container_background
                     })
-                ], style = {'background': container_background})
+                ], style = {'background': container_background}),
+                html.Br(),
+                dbc.Row([
+                    html.Div(id='molecule-info-container')
+                ])
             ],  width={
                     'size': 7,
                     'offset': 0
-            },  style={'height': '90vh', 'background': container_background}),
+            },  style={
+                'height': '90vh', 
+                'background': container_background}),
             dbc.Col(width={'size': 1}),
             dbc.Col([
-                html.H3('Result output'),
                 dbc.Row([
-                    html.Div([
-                        dbc.Button('Taxonomy', id = 'taxonomy', className = 'me-1', color = 'primary', outline = True),
-                        dbc.Button('Accession Number', id = 'accession-number', className = 'me-1', color = 'primary', outline = True),
-                        dbc.Button('Node', id = 'node', className = 'me-1', color = 'primary', outline = True),
-                    ], style = {'padding': '10px'})
-                ]),
+                    dbc.Col(
+                        html.Div([
+                            dbc.Button(
+                                'Taxonomy', 
+                                id='taxonomy', 
+                                className='me-1', 
+                                color='primary', 
+                                outline=True, 
+                                style={'width': '100%'}),
+                        ]),
+                        width=4
+                    ),
+                    dbc.Col(
+                        html.Div([
+                            dbc.Button(
+                                'Node', 
+                                id='node', 
+                                className='me-1', 
+                                color='primary', 
+                                outline=True,
+                                style={'width': '100%'}),
+                        ]),
+                        width=4
+                    ),
+                    dbc.Col(
+                        html.Div([
+                            dbc.Button(
+                                'Accession', 
+                                id='accession-number', 
+                                className='me-1', 
+                                color='primary', 
+                                outline=True, 
+                                style={'width': '100%'}),
+                        ]),
+                        width=4
+                    ),
+                ], style={'margin-bottom':'10px'}),
                 dbc.Row([
                     dcc.Loading(
                         dcc.Dropdown(
                             id = 'search-dropdown',
                             placeholder = 'Select a search option',
-                            clearable = True
+                            clearable = True,
                         ),
                         type = 'default'
                     )
@@ -103,14 +138,13 @@ layout = html.Div([
                     dcc.Loading(
                         id='result-container-loading', 
                         type='circle', 
-                        fullscreen = True, 
+                        fullscreen = False, 
                         children = [
                             html.Div(
-                                id = 'results-container', 
+                                id = 'table-container', 
                                 style = {
                                     'textAlign': 'center',
-                                    'padding': '10px',
-                                    'justify-content': 'center',
+                                    'justify-content': 'center'
                                 })
                     ])
                 ]), 
@@ -118,9 +152,9 @@ layout = html.Div([
                     'size': 4, 
                     'offset': 0}, 
                 style={
-                    'height': '90vh', 
+                    'height': '150vh', 
                     'background': container_background,
-                    'padding': '10px'}),
+                    'padding': '20px'}),
         ]),
     ], style={
         'backgroundColor': page_background,

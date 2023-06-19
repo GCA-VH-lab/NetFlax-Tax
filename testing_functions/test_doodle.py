@@ -1,277 +1,187 @@
-import pandas as pd
-import numpy as np 
-import plotly.graph_objects as go
-import plotly.express as px
-#import kaleido #required
-import plotly.io as pio
-
-
-
-import dash
-from dash import dcc, html, Input, Output
-import plotly.express as px
-import pandas as pd
-
-df = pd.DataFrame({
-    'colA': ['A', 'A', 'A', 'A'],
-    'colB': ['B', 'B', 'E', 'E'],
-    'colC': ['C', 'D', 'F', 'G'],
-    'value': [4, 16, 35, 5],
-    'scale_value': [100, 50, 50, 50]
-})
-
-fig = px.sunburst(
-    data_frame=df,
-    path=['colA', 'colB', 'colC'],
-    values='scale_value',
-    color='colA',
-    color_continuous_scale=px.colors.sequential.Plasma,
+@callback(
+    Output('a1_taxonomy_sunburst', 'figure'),
+    Output('results-container', 'children'),
+    Input('taxonomy_level_slider', 'value'),
+    Input('search-dropdown', 'value'),
+    Input({'type': 'ta-button', 'index': 'n_clicks'}, 'n_clicks')
 )
-
-app = dash.Dash(__name__)
-
-app.layout = html.Div([
-    dcc.Input(id='search-input', type='text', placeholder='Enter search term'),
-    dcc.Graph(id='sunburst-chart', figure=fig)
-])
-
-@app.callback(
-    Output('sunburst-chart', 'figure'),
-    [Input('search-input', 'value')]
-)
-def update_sunburst(search_term):
-    if search_term:
-        df['color'] = 'gray' # initialize color to gray for all segments
-        df.loc[df['colC'] == search_term, 'color'] = 'red' # set color to red for matching segments
-        fig = px.sunburst(
-            data_frame=df,
-            path=['colA', 'colB', 'colC'],
-            values='scale_value',
-            color='color',
-            color_discrete_map={'gray': 'gray', 'red': 'red'},
-            color_continuous_scale=px.colors.sequential.Plasma,
-        )
-    else:
-        fig = px.sunburst(
-            data_frame=df,
-            path=['colA', 'colB', 'colC'],
-            values='scale_value',
-            color='colA',
-            color_continuous_scale=px.colors.sequential.Plasma,
-        )
-
-    return fig
-
-if __name__ == '__main__':
-    app.run_server(debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-df_all = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
-df_netflax = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
-
-
-
-# Works, NOTE  need similar for Sunburst plot
-def ta_distribution_table(level, df_nf, df_all, kingdom=None):
-    """
-    Constructs a table from two pivots tables (different df).
-
-    Parameters: 
-    level (str): Taxonomy level at which to sort the table (possible: 
-        'phylum', 'class', 'order', 'family', or 'genus')
-    df_nf (df): Netflax dataset/sheet
-    df_all (df): All searched genomes dataset/sheet
-    kingdom (str): If specified, will only select genomes of given 
-        kingdom (possible: 'Bacteria', 'Archaea', or 'Viruses')
-
-    Returns:
-    table (df): Table with three columns (1) netflax genome count, 
-    (2) all searched genome count, and (3) the difference as percentage
-    """
+def update_sunburst_level(level=None, search_term=None, button_index=None):
+    # ----------------------- STRUCTURE BUTTON -------------------------
+    if button_index is not None:
+        search_term = button_index
     
-    # 1. Only keeping the TAs of the selected kingdom in the df
-    if kingdom is not None:            
-        df_all = df_all[df_all['superkingdom'] == kingdom]
-        df_nf = df_nf[df_nf['superkingdom'] == kingdom]
-
-    # 2. Creating pivot tables (isolating relevant columns)
-    pivot_nf = df_nf.pivot_table(index=level, values='taxa', aggfunc='count')
-    pivot_all = df_all.pivot_table(index=level, values='taxa', aggfunc='count')
-
-    # 3. Merging the pivot tables
-    table = pd.merge(pivot_nf, pivot_all, on=level)
     
-    # 4. Adding a percentage column to the new table
-    table['percentage'] = ((table['taxa_x']/(table['taxa_x'] + table['taxa_y'])) * 100).round(2)
-    table = table.sort_values('taxa_x', ascending=False)
+    # ------------------------------ SEARCH ----------------------------
+    if search_term != None:
+        if search_term.startswith('WP_'):
+            # Search by accession
+            df = df_netflax.copy()
+            mask = (df['at_accession'].str.contains(search_term, case=False)) | (df['t_accession'].str.contains(search_term, case=False))
+            filtered_df = df.loc[mask]
 
-    return table
+            last_ring = filtered_df[filtered_df['at_accession'] == search_term]['taxa'].values[0] \
+                if len(filtered_df[filtered_df['at_accession'] == search_term]['taxa'].values) > 0 \
+                else filtered_df[filtered_df['t_accession'] == search_term]['taxa'].values[0]
 
+            df['color'] = wedge_non_highlight
+            df.loc[df['taxa'] == last_ring, 'color'] = wedge_highlight
 
+            fig = create_sunburst_figure(df, 'color', wedge_highlight)
 
-def nf_or_not(row):
-    if row['proteome_size'] > 0:
-        return 'Yes'
-    else:
-        return 'No'
+            sunburst_fig = fig
+            dataset = df_netflax[df_netflax.values == search_term]
+            fig_antitoxin, fig_toxin = create_protein_logos(search_term)
+            structure_data, styles, chain_sequence = visualising_protein(search_term)
 
-df_all['NetFlax'] = df_all.apply(lambda row: nf_or_not(row), axis = 1)
+            results_div = create_results_div(
+                f'Search results for "{search_term}"',
+                html.Div([
+                    dbc.Row([
+                        html.H5('Antitoxin'),
+                        dcc.Graph(id='antitoxin-logo', figure=fig_antitoxin),
+                    ], width=5),
+                    dbc.Col(width=1),
+                    dbc.Row([
+                        html.H5('Toxin'),
+                        dcc.Graph(id='toxin-logo', figure=fig_toxin),
+                    ], width=5),
+                    dbc.Row([
+                        html.H5('Toxin-Antitoxin Structure'),
+                        dashbio.Molecule3dViewer(
+                            id='dashbio-default-molecule3d',
+                            modelData=structure_data,
+                            styles=styles
+                        ),
+                    ]),
+                    dbc.Row([
+                        dashbio.SequenceViewer(
+                            id='dashbio-default-sequenceviewer',
+                            sequence=chain_sequence,
+                        ),
+                    ]),
+                ])
+            )
 
-df = df_netflax.pivot_table(columns = ['at_t_combinations'], aggfunc = 'size')
+            return sunburst_fig, results_div
 
+        elif search_term.startswith('D') or search_term.startswith('M') or search_term.startswith('Panacea'):
+            # Search by node
+            df = df_netflax.copy()
+            mask = (df['at_domain'].str.contains(search_term, case=False)) | (df['t_domain'].str.contains(search_term, case=False))
+            filtered_df = df.loc[mask]
 
+            # Get the last ring based on the taxa of the selected row
+            last_ring = ""
+            if len(filtered_df[filtered_df['at_domain'] == search_term]['taxa'].values) > 0:
+                last_ring = filtered_df[filtered_df['at_domain'] == search_term]['taxa'].values[0]
+            elif len(filtered_df[filtered_df['t_domain'] == search_term]['taxa'].values) > 0:
+                last_ring = filtered_df[filtered_df['t_domain'] == search_term]['taxa'].values[0]
 
+            # Set the color of all matching segments to lightblue
+            df['color'] = wedge_non_highlight
+            df.loc[df['taxa'] == last_ring, 'color'] = wedge_highlight
 
-print(df.to_string())
+            fig = create_sunburst_figure(df, 'color', wedge_highlight)
 
-comb = df_netflax['at_t_combinations'].nunique()
+            sunburst_fig = fig
+            dataset = df_netflax[df_netflax.values == search_term]
+            table = create_table(dataset)
+            results_div = create_results_div(f'Node: "{search_term}"', table)
 
-# from scipy.stats import chi2_contingency
+            return sunburst_fig, results_div
 
-# for col in df_netflax.columns:
-#     if df_netflax[col].dtype == object:
-#         cross_tab = pd.crosstab(df_netflax["Phylum"], df_netflax[col])
-#         chi2, p, dof, expected = chi2_contingency(cross_tab)
-#         print(f"The p-value for association between column_A and {col} is {p}")
+        else:
+            # Search by taxonomy at any level
+            df = df_netflax.copy()
+            df['color'] = wedge_non_highlight
 
+            if search_term in df['superkingdom'].values:
+                level = 0
+                df.loc[df['superkingdom'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['phylum'].values:
+                level = 1
+                df.loc[df['phylum'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['class'].values:
+                level = 2
+                df.loc[df['class'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['order'].values:
+                level = 3
+                df.loc[df['order'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['family'].values:
+                level = 4
+                df.loc[df['family'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['genus'].values:
+                level = 5
+                df.loc[df['genus'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['taxa'].values:
+                level = 6
+                df.loc[df['taxa'] == search_term, 'color'] = wedge_highlight
+            else:
+                print(f'{search_term} does not exist')
 
+            fig = create_sunburst_figure(df, 'color', wedge_highlight)
 
-# Graph 1. Superkingdom overview
-# fig = go.Figure(go.Sunburst(
-#     values = [24466, 13551, 3286, 10449, 13, 466, 120],
-#     labels = ['Total', 'Bacteria_All', 'Bacteria_NF', 'Viruses_All', 'Virsues_NF', 'Archaea_All', 'Archaea_NF' ],
-#     parents = ['', 'Total', 'Bacteria_All', 'Total', 'Viruses_All', 'Total', 'Archaea_All'],
-#     branchvalues = 'total'
-# ))
-# fig.show()
+            sunburst_fig = fig
+            dataset = df_netflax[df_netflax.values == search_term]
+            table = create_table(dataset)
+            results_div = create_results_div(f'Node: "{search_term}"', table)
 
-# Heat map
-# pivot_1 = pd.pivot_table(
-#     df_netflax,
-#     values = ['Taxa'], 
-#     index = ['Phylum'],
-#     columns = ['Combination'],
-#     aggfunc = lambda x: len(x.unique())
-# )
+            return sunburst_fig, results_div
 
-# data = pivot_1['Taxa']
+   # ------------------------------ SLIDER ----------------------------
 
-# fig = px.imshow(
-#     data,
-#     )
-# fig.update_layout(
-#     width = 2500, 
-#     height = 1000,
-#     yaxis_nticks=len(data),
-#     xaxis_nticks=250,
-#     # yaxis = dict(
-#     #     range = [-1, len(data)]
-#     # ),
-#     # xaxis = dict(
-#     #     range = [0, 250]
-#     # ),
-#     coloraxis_showscale = True,
-#     margin=dict(t=10, b=10, l=10, r=10),
-#     )  
-# fig.show()
+    # Create a sunburst chart with the selected number of levels
+    dataset = df_netflax
+    if level is None:
+        level = 3  # default value if level is not selected
 
-# pivot_nf = pd.pivot_table(
-#     df_netflax,
-#     values = ['Taxa'], 
-#     index = ['Phylum'],
-#     columns = ['Superkingdom'],
-#     aggfunc = lambda x: len(x.unique())
-# )
-# pivot_all = pd.pivot_table(
-#     df_all,
-#     values = ['Taxa'], 
-#     index = ['Phylum'],
-#     columns = ['Superkingdom'],
-#     aggfunc = lambda x: len(x.unique())
-# )
-# data = (pivot_nf.merge(pivot_all, on = 'Phylum'))
-
-
-# for value in data:
-#     for kingdom in data['Phylum']:
-#         nf_value = ['Taxa_x']['Archaea'][value]
-#         og_value = ['Taxa_y']['Archaea'][value]
-#         data['Taxa_y']['Archaea'] == data['Taxa_y']['Archaea'].replace(value, og_value-nf_value)
+    # Creating the plot    
+    fig = sunburst_plot = px.sunburst(
+        data_frame = dataset,
+        path = paths[level],
+        color = 'superkingdom',
+        color_discrete_sequence = px.colors.qualitative.Pastel,
+    )
+    fig.update_traces(
+        marker = dict(line = dict(color = page_background, width = 0.75)),
+        hovertemplate='<b>%{label} </b> <br>Taxonomy: %{id}<br>Number of TAs: %{value}',
+    )
+    fig.update_layout(
+        plot_bgcolor = transparent_background,
+        paper_bgcolor = transparent_background)
     
+    sunburst_fig = fig
+    table = create_table(dataset)
 
-# barplot = px.bar(
-#     data, 
-#     x = data['Superkingdom'], 
-#     y = data['Phylum'],
-#     color = 'Phylum'
-# )
-# barplot.update_yaxes(autorange = 'reversed')
-# barplot.show()
+    return sunburst_fig, html.Div(
+            children=[
+                dbc.Row([
+                    html.H4(f'Search results for "{search_term}"'),
+                    dbc.Row([
+                        'InfoBox'
+                    ]),
+                    dbc.Row([
+                        dbc.Col([
 
+                        ]),
+                        dbc.Col([
 
-
-# x and y given as DataFrame columns
-# fig = px.scatter(
-#     df_netflax, 
-#     x=df_netflax['ATDomain'], 
-#     y='Combination', 
-#     color='Superkingdom',  
-#     width=800, 
-#     height=800)
-
-# fig.update_layout(xaxis = {'dtick':1})
-# fig.show()
-
-fig = px.scatter(
-    df, 
-    x=df_netflax['ATDomain'], 
-    y='Combination', 
-    color='Superkingdom',  
-    width=800, 
-    height=800)
-
-fig.update_layout(xaxis = {'dtick':1})
-fig.show()
-
-# Sunburst AT and T domains
-# fig = px.sunburst(
-#         data_frame = df_netflax,
-#         path = ['TDomain', 'ATDomain'], 
-#         maxdepth = -1
-#     )
-# config = {'toImageButtonOptions': {'format': 'svg','filename': 'FlaGs','scale': 1}}
-# fig.show(config=config)
-
-# pio.write_image(fig, 'plot.svg', format='svg')
-
-
-
-# fig = px.bar_polar(
-#     df_netflax,
-#     r="Proteome size", 
-#     theta="Combination", 
-#     color="ATDomain",
-#     color_discrete_sequence= px.colors.sequential.Plasma_r,
-#     title="Part of a continuous color scale used as a discrete sequence"
-# )
-# fig.show()
-
-# features = ['TDomain', 'ATDomain', 'Phylum']
-# fig = px.scatter_matrix(
-#     df_netflax,
-#     dimensions=features, 
-#     color = 'Superkingdom')
-
-# fig.update_traces(diagonal_visible=False)
-# fig.show()
+                        ])
+                    ]),
+                    dbc.Row([
+                        "Selection data",
+                        html.Hr(),
+                        html.Div(id = 'molecule-info-container')
+                    ]),
+                    dbc.Row([
+                        'Filtered NetFlax Table Results',
+                        html.Div(
+                            table,
+                            className='table-container',
+                            style={'overflowX': 'auto', 'overflowY': 'scroll', 'maxHeight': '400px'}
+                        )
+                    ]),
+                ]),
+            ]
+        )  
+ 

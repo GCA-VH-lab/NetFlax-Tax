@@ -1,0 +1,23 @@
+.table-container .sticky-column {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: white;
+}
+
+
+.styled-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.styled-table th,
+.styled-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.styled-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}

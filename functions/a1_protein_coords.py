@@ -9,6 +9,7 @@ from urllib.request import urlopen
 from io import StringIO
 from dash_bio.utils import PdbParser, create_mol3d_style
 from Bio.PDB import PDBParser, Polypeptide
+import time
 
 
 # Import data
@@ -93,7 +94,10 @@ def structure_file(accession):
             # Handle unexpected values in the DataFrame
             raise ValueError('Invalid DataFrame values')
         
-        chain_colors = {'A': chain_a_color,'B': chain_b_color}
+        chain_colors = {'A': chain_a_color, 'B': chain_b_color}
+
+        # Introduce a delay before returning the results
+        time.sleep(1)  # Adjust the delay duration as needed
     
         return pdb_file_url, antitoxin, toxin, chain_colors, chain_a, chain_b
 

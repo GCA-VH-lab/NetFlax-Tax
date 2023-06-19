@@ -5,13 +5,16 @@ import dash
 from dash import html
 import dash_bootstrap_components as dbc
 
+# Additional CSS code
+from assets import *
+
 
 # --------------------------- CREATE APP -------------------------------
 
 # Create the app
 app = dash.Dash(
     __name__,
-    assets_folder='assets', 
+    #assets_folder='assets', 
     external_stylesheets = [dbc.themes.SANDSTONE, 
                             dbc.icons.BOOTSTRAP],
     suppress_callback_exceptions = True,
@@ -26,7 +29,6 @@ app.title = ('NetFlax Tax')
 app.layout = html.Div(children=[
     dash.page_container
 ])
-
 
 # Run the app
 if __name__ == '__main__':
