@@ -14,6 +14,9 @@ from images import *
 logo = './images/app_logo.png'
 logo_base64 = base64.b64encode(open(logo, 'rb').read()).decode('ascii')
 
+netflax_icon = './images/favicon.ico'
+netflax_icon_base64 = base64.b64encode(open(netflax_icon, 'rb').read()).decode('ascii')
+
 
 # ------------------------- NAVIGATION BAR -----------------------------
 
@@ -41,9 +44,9 @@ navbar = dbc.Navbar(
                     dbc.NavItem(
                         # Link to NetFlax
                         dbc.NavLink(
-                            html.I(className = 'bi bi-brightness-low-fill'),
-                            href = '''https://server.atkinson-lab.com/netflax''',
-                            external_link = True)),
+                            html.Img(src='data:image/png;base64,{}'.format(netflax_icon_base64), height='15px'),
+                                href = '''https://server.atkinson-lab.com/netflax''',
+                                external_link = True)),
                     dbc.NavItem(
                         # Ling to Lab's GitHub
                         dbc.NavLink(

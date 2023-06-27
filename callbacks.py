@@ -70,21 +70,21 @@ def update_dropdown_options(taxa_click=None, acc_click=None, node_click=None):
     if button_id == 'taxonomy':
         # Make a list with all values of all the taxonomy columns
         options = list(set(pd.concat(
-            [df['superkingdom'], 
-            df['phylum'], 
-            df['class'], 
-            df['order'], 
-            df['family'], 
-            df['genus'], 
-            df['taxa']]).tolist()))
+            [df['Superkingdom'], 
+            df['Phylum'], 
+            df['Class'], 
+            df['Order'], 
+            df['Family'], 
+            df['Genus'], 
+            df['Taxa']]).tolist()))
         options = sorted(options)
     elif button_id == 'accession-number':
         # Make a list of all ac
-        options = list(set(pd.concat([df['at_accession'], df['t_accession']]).tolist()))
+        options = list(set(pd.concat([df['AT Accession'], df['T Accession']]).tolist()))
         options = sorted(options)
     elif button_id == 'node':
         # Make a list of all nodes
-        options = list(set(pd.concat([df['at_domain'], df['t_domain']]).tolist()))
+        options = list(set(pd.concat([df['AT Domain'], df['T Domain']]).tolist()))
         options = sorted(options)
     else:
         # Otherwise the dropdown menu is empty
@@ -110,7 +110,7 @@ def update_sunburst_level(level=None, search_term=None, button_clicks=None, butt
     A callback to update the taxonomy wheel figure through:
         1. Search by taxonomy, accession, or node
         2. The slider (taxonomy level)
-    Default level is set at 'order' (3). 
+    Default level is set at 'Order' (3). 
 
     Args:
         level: The taxonomic level
@@ -136,19 +136,19 @@ def update_sunburst_level(level=None, search_term=None, button_clicks=None, butt
         if search_term.startswith('WP_'):
             df = df_netflax.copy()
             # Filter the dataframe for the selected search term
-            mask = (df['at_accession'].str.contains(search_term, case=False)) | (df['t_accession'].str.contains(search_term, case=False))
+            mask = (df['AT Accession'].str.contains(search_term, case=False)) | (df['T Accession'].str.contains(search_term, case=False))
             filtered_df = df.loc[mask]
 
             # Get the last ring based on the taxa of the selected row
             last_ring = ""
-            if len(filtered_df[filtered_df['at_accession'] == search_term]['taxa'].values) > 0:
-                last_ring = filtered_df[filtered_df['at_accession'] == search_term]['taxa'].values[0]
-            elif len(filtered_df[filtered_df['t_accession'] == search_term]['taxa'].values) > 0:
-                last_ring = filtered_df[filtered_df['t_accession'] == search_term]['taxa'].values[0]
+            if len(filtered_df[filtered_df['AT Accession'] == search_term]['Taxa'].values) > 0:
+                last_ring = filtered_df[filtered_df['AT Accession'] == search_term]['Taxa'].values[0]
+            elif len(filtered_df[filtered_df['T Accession'] == search_term]['Taxa'].values) > 0:
+                last_ring = filtered_df[filtered_df['T Accession'] == search_term]['Taxa'].values[0]
 
             # Set the color based on matching or non-matching segments
             df['color'] = wedge_non_highlight
-            df.loc[df['taxa'] == last_ring, 'color'] = wedge_highlight
+            df.loc[df['Taxa'] == last_ring, 'color'] = wedge_highlight
 
             # Updated dataset          
             dataset = df_netflax[df_netflax.values == search_term]
@@ -230,18 +230,18 @@ def update_sunburst_level(level=None, search_term=None, button_clicks=None, butt
         elif search_term.startswith('D') or search_term.startswith('M') or search_term.startswith('Panacea'):
             # Filter the dataframe for the selected search term
             df = df_netflax.copy()
-            mask = (df['at_domain'].str.contains(search_term, case=False)) | (df['t_domain'].str.contains(search_term, case=False))
+            mask = (df['AT Domain'].str.contains(search_term, case=False)) | (df['T Domain'].str.contains(search_term, case=False))
             filtered_df = df.loc[mask]
 
             # Get the last ring based on the taxa of the selected row
             last_ring = ""
-            if len(filtered_df[filtered_df['at_domain'] == search_term]['taxa'].values) > 0:
-                last_ring = filtered_df[filtered_df['at_domain'] == search_term]['taxa'].values[0]
-            elif len(filtered_df[filtered_df['t_domain'] == search_term]['taxa'].values) > 0:
-                last_ring = filtered_df[filtered_df['t_domain'] == search_term]['taxa'].values[0]
+            if len(filtered_df[filtered_df['AT Domain'] == search_term]['Taxa'].values) > 0:
+                last_ring = filtered_df[filtered_df['AT Domain'] == search_term]['Taxa'].values[0]
+            elif len(filtered_df[filtered_df['T Domain'] == search_term]['Taxa'].values) > 0:
+                last_ring = filtered_df[filtered_df['T Domain'] == search_term]['Taxa'].values[0]
 
             # Set the color based on matching or non-matching segments
-            df['color'] = np.where(df['taxa'].isin(filtered_df['taxa']), wedge_highlight, wedge_non_highlight)
+            df['color'] = np.where(df['Taxa'].isin(filtered_df['Taxa']), wedge_highlight, wedge_non_highlight)
 
             # New dataset
             level = 6
@@ -262,27 +262,27 @@ def update_sunburst_level(level=None, search_term=None, button_clicks=None, butt
             df['color'] = wedge_non_highlight
 
             # Determine in which column the search term is present
-            if search_term in df['superkingdom'].values:
+            if search_term in df['Superkingdom'].values:
                 level = 0
-                df.loc[df['superkingdom'] == search_term, 'color'] = wedge_highlight
-            elif search_term in df['phylum'].values:
+                df.loc[df['Superkingdom'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['Phylum'].values:
                 level = 1
-                df.loc[df['phylum'] == search_term, 'color'] = wedge_highlight
-            elif search_term in df['class'].values:
+                df.loc[df['Phylum'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['Class'].values:
                 level = 2
-                df.loc[df['class'] == search_term, 'color'] = wedge_highlight
-            elif search_term in df['order'].values:
+                df.loc[df['Class'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['Order'].values:
                 level = 3
-                df.loc[df['order'] == search_term, 'color'] = wedge_highlight
-            elif search_term in df['family'].values:
+                df.loc[df['Order'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['Family'].values:
                 level = 4
-                df.loc[df['family'] == search_term, 'color'] = wedge_highlight
-            elif search_term in df['genus'].values:
+                df.loc[df['Family'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['Genus'].values:
                 level = 5
-                df.loc[df['genus'] == search_term, 'color'] = wedge_highlight
-            elif search_term in df['taxa'].values:
+                df.loc[df['Genus'] == search_term, 'color'] = wedge_highlight
+            elif search_term in df['Taxa'].values:
                 level = 6
-                df.loc[df['taxa'] == search_term, 'color'] = wedge_highlight
+                df.loc[df['Taxa'] == search_term, 'color'] = wedge_highlight
             else:
                 print(f'{search_term} does not exist')
 
@@ -352,17 +352,3 @@ def download_csv(n_clicks):
     return dcc.send_data_frame(df.to_csv, "mydf.csv", index=False)
 
 
-
-
-@callback(
-    Output('error-message', 'children'),
-    [Input('interval-component', 'n_intervals')]
-)
-def check_error_message(n_intervals):
-    # Assuming `get_error_message()` is a function that returns the error message
-    error_message = get_error_message()
-    
-    if error_message:
-        return html.Div(error_message, className='error-text')
-    else:
-        return ''

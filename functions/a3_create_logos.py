@@ -82,7 +82,6 @@ def protein_coords(protein_accession):
 
     # Create a dataframe with the accession numbers and residue counts
     protein_coords_df = pd.DataFrame(data)
-    print('WP_181273885.1')
 
     return protein_coords_df, antitoxin, toxin
 

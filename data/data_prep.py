@@ -6,10 +6,10 @@ import pandas as pd
 
 
 # All TA searches
-df_all = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='01_searched_genomes')
+df_all = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='2. Searched Genomes')
 
 # Only NetFlax TAs
-df_netflax = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='02_netflax_predicted_tas')
+df_netflax = pd.read_excel('./data/netflax_dataset.xlsx', engine='openpyxl', sheet_name='3. NetFlax Predicted TAs')
 
 # Domains found in all NetFlax TAs for 3 databases
 df_domains_original = pd.read_csv('./data/domains.txt', sep = '\t', header = 0)

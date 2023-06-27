@@ -1,4 +1,4 @@
-# GETTING INFO ABOUT NETFLAX TAs
+# GETTING COORD INFO ABOUT NETFLAX TAs
 
 # Imports
 import pandas as pd
@@ -80,12 +80,12 @@ def structure_file(accession):
             raise ValueError('Invalid accession')
 
         # Determine antitoxin and toxin based on accession and complementary chain
-        if accession_chain in df_netflax['at_accession'].values:
+        if accession_chain in df_netflax['AT Accession'].values:
             antitoxin = accession_chain
             toxin = complement_chain
             chain_a_color = 'lightgreen'
             chain_b_color = 'pink'
-        elif accession_chain in df_netflax['t_accession'].values:
+        elif accession_chain in df_netflax['T Accession'].values:
             toxin = accession_chain
             antitoxin = complement_chain
             chain_a_color = 'pink'

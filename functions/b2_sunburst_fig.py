@@ -15,13 +15,13 @@ from assets.color_scheme import *
 
 # Create a list of paths with different number of levels
 paths = {
-    0: ['superkingdom'],
-    1: ['superkingdom', 'phylum'],
-    2: ['superkingdom', 'phylum', 'class'],
-    3: ['superkingdom', 'phylum', 'class', 'order'],
-    4: ['superkingdom', 'phylum', 'class', 'order', 'family'],
-    5: ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus'],
-    6: ['superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'taxa']
+    0: ['Superkingdom'],
+    1: ['Superkingdom', 'Phylum'],
+    2: ['Superkingdom', 'Phylum', 'Class'],
+    3: ['Superkingdom', 'Phylum', 'Class', 'Order'],
+    4: ['Superkingdom', 'Phylum', 'Class', 'Order', 'Family'],
+    5: ['Superkingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus'],
+    6: ['Superkingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Taxa']
 }
 
 
@@ -41,7 +41,7 @@ def create_sunburst_figure(df, level=None, color_column=None, default='yes'):
         fig = px.sunburst(
             data_frame=df,
             path=paths[level],
-            color='superkingdom',
+            color='Superkingdom',
             color_discrete_map={
                 'purple': wheel_bacteria,
                 'yellow': wheel_archea,

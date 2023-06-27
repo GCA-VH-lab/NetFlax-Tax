@@ -18,7 +18,7 @@ from assets.color_scheme import *
 
 def create_table(dataset):
     # List of TAs
-    ta_list = dataset['ta_pair'].unique()
+    ta_list = dataset['TA Pair'].unique()
 
     # List for storing table rows
     table_rows = []
@@ -43,7 +43,7 @@ def create_table(dataset):
         table_row = html.Tr([
             html.Td(button),
             html.Td(ta),
-            html.Td(dataset.loc[dataset['ta_pair'] == ta, 'taxa'].iloc[0]),
+            html.Td(dataset.loc[dataset['TA Pair'] == ta, 'Taxa'].iloc[0]),
         ])
         table_rows.append(table_row)
 
